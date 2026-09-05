@@ -1,0 +1,6 @@
+{
+  "name": "PropTech Decision Intelligence Platform",
+  "description": "Piattaforma di Decision Intelligence Immobiliare con motore di rating dinamico, graceful degradation e loop di apprendimento proprietario.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
