@@ -27,6 +27,8 @@ import {
 import { PropertyItem, SubDimension, ActionScenario, DecisionTask, DecisionHistoryItem } from './types/intelligence';
 import { CheckCircle2 } from 'lucide-react';
 
+const PROTOTYPE_VERSION = 'v0.1';
+
 export default function App() {
   // Navigation State
   const [activeTab, setActiveTab] = useState<MainNavTab>('overview');
@@ -119,7 +121,7 @@ export default function App() {
     setDecisionTasks(prev => prev.filter(t => t.propertyId !== selectedProperty.id));
 
     const decisionLabel = type === 'ACCEPTED' ? 'Accettata' : type === 'MODIFIED' ? 'Modificata' : 'Rifiutata';
-    setToastMessage(`Decisione registrata: ${decisionLabel} • Loop di apprendimento del sistema aggiornato`);
+    setToastMessage(`Decisione demo registrata: ${decisionLabel} • Stato del prototipo aggiornato`);
     setTimeout(() => setToastMessage(null), 4000);
   };
 
@@ -244,7 +246,7 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'clients_crm' && (
+          {activeTab === 'clients_demand' && (
             <ClientsCrmView
               properties={properties}
               onSelectProperty={handleSelectProperty}
@@ -267,6 +269,10 @@ export default function App() {
             <OrganizationSettingsView mode={activeTab === 'organization' ? 'organization' : 'settings'} />
           )}
         </main>
+      </div>
+
+      <div className="fixed bottom-4 left-4 z-50 rounded-full border border-amber-400/40 bg-amber-950/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-200 shadow-xl backdrop-blur-sm">
+        Prototype {PROTOTYPE_VERSION} · Dati e integrazioni simulati
       </div>
 
       {/* 3. Explainability Drawer */}

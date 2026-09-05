@@ -115,13 +115,13 @@ export const ClientsCrmView: React.FC<ClientsCrmViewProps> = ({
             Clients & Demand Intelligence
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            “Chi sono gli acquirenti pronti all'acquisto?” Cluster qualificati, stato finanziario del mutuo e matching istantaneo.
+            Scenario demo di cluster acquirenti, stato finanziario e matching immobiliare.
           </p>
         </div>
 
         <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-          <span>Integrazione CRM:</span>
-          <span className="text-emerald-400 font-bold">148 Acquirenti Mappati</span>
+          <span>CRM simulato:</span>
+          <span className="text-amber-300 font-bold">148 acquirenti demo</span>
         </div>
       </div>
 
@@ -215,7 +215,7 @@ export const ClientsCrmView: React.FC<ClientsCrmViewProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
             <h3 className="text-base font-bold text-white tracking-tight">
-              Matching Immediato con Acquirenti Verificati
+              Matching Dimostrativo con Acquirenti Simulati
             </h3>
             <p className="text-xs text-slate-400">
               Acquirenti con punteggio di affinità superiore al 90% con delibera mutuo attiva.

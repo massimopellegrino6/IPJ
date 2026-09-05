@@ -43,7 +43,7 @@ export const ExplainabilityDrawer: React.FC<ExplainabilityDrawerProps> = ({
     modelVersion: 'Modello Rating v0.1',
     positiveFactors: [
       'Prezzo inferiore al valore congruo stimato dall\'algoritmo (-7,7%)',
-      'Forte evidenza comparabile verificata (11 rogiti notarili registrati nel raggio di 500m)',
+      'Evidenza comparabile simulata (11 rogiti notarili demo nel raggio di 500m)',
       'Indice di domanda acquirenti qualificati nel top 15° percentile per Appio Latino'
     ],
     negativeFactors: [

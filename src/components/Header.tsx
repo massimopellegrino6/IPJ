@@ -76,9 +76,9 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Data Freshness Live Badge */}
         <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-400">
           <RefreshCw className="w-3 h-3 text-emerald-400 animate-spin-slow" />
-          <span>Sincronizzato 4h fa</span>
+          <span>Dataset demo aggiornato</span>
           <span className="text-slate-600">•</span>
-          <span className="text-slate-400 font-semibold">Modello v0.1</span>
+          <span className="text-slate-400 font-semibold">Prototype v0.1</span>
         </div>
 
         {/* AI Assistant Button (Discrete, non-intrusive) */}

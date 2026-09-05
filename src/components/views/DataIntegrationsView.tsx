@@ -31,7 +31,7 @@ export const DataIntegrationsView: React.FC = () => {
       name: 'Agenzia delle Entrate (OMI)',
       category: 'Quotazioni Ufficiali & Bande di Valore',
       provider: 'Banca Dati OMI - Min. Economia e Finanze',
-      status: 'CONNECTED',
+      status: 'SIMULATED',
       latency: '24ms',
       qualityScore: 98,
       coveragePct: 99.4,
@@ -44,7 +44,7 @@ export const DataIntegrationsView: React.FC = () => {
       name: 'Conservatoria / Atti Notarili',
       category: 'Verità Contrattuale a Rogito',
       provider: 'Registri Immobiliari & Agenzia Entrate',
-      status: 'CONNECTED',
+      status: 'SIMULATED',
       latency: '42ms',
       qualityScore: 99,
       coveragePct: 96.8,
@@ -57,7 +57,7 @@ export const DataIntegrationsView: React.FC = () => {
       name: 'Portali Immobiliari',
       category: 'Offerta Concorrente & Prezzi di Vetrina',
       provider: 'Aggregatore Multi-Portal (Immobiliare, Idealista, Casa)',
-      status: 'CONNECTED',
+      status: 'SIMULATED',
       latency: '15ms',
       qualityScore: 92,
       coveragePct: 98.2,
@@ -70,7 +70,7 @@ export const DataIntegrationsView: React.FC = () => {
       name: 'Catasto',
       category: 'Dati Fabbricati & Planimetrie',
       provider: 'Agenzia delle Entrate - Territorio',
-      status: 'CONNECTED',
+      status: 'SIMULATED',
       latency: '35ms',
       qualityScore: 97,
       coveragePct: 99.1,
@@ -83,7 +83,7 @@ export const DataIntegrationsView: React.FC = () => {
       name: 'CRM Agenzia',
       category: 'Domanda Locale & Richieste Acquirenti',
       provider: 'Database Gestionale Agenzia Interno',
-      status: 'CONNECTED',
+      status: 'SIMULATED',
       latency: '8ms',
       qualityScore: 95,
       coveragePct: 100,
@@ -96,7 +96,7 @@ export const DataIntegrationsView: React.FC = () => {
       name: 'Dati Demografici / ISTAT',
       category: 'Popolazione, Reddito & Densità',
       provider: 'Istituto Nazionale di Statistica (ISTAT)',
-      status: 'CONNECTED',
+      status: 'SIMULATED',
       latency: '60ms',
       qualityScore: 96,
       coveragePct: 100,
@@ -109,7 +109,7 @@ export const DataIntegrationsView: React.FC = () => {
       name: 'Dati Mobilità / Trasporti',
       category: 'Accessibilità & Rete TPL',
       provider: 'OpenStreetMap & Agenzie Mobilità Urbana',
-      status: 'CONNECTED',
+      status: 'SIMULATED',
       latency: '18ms',
       qualityScore: 94,
       coveragePct: 97.5,
@@ -122,7 +122,7 @@ export const DataIntegrationsView: React.FC = () => {
       name: 'Piani Urbanistici',
       category: 'Rigenerazione & Vincoli Edificatori',
       provider: 'Geoportali Comunali (PRG, PGT, PUMS)',
-      status: 'CONNECTED',
+      status: 'SIMULATED',
       latency: '85ms',
       qualityScore: 91,
       coveragePct: 93.0,
@@ -144,7 +144,7 @@ export const DataIntegrationsView: React.FC = () => {
             Data Integrations
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            “Da dove arrivano i dati?” Fonti verificate con stato connettività, latency e indice di qualità del dato.
+            Anteprima delle fonti previste: connettività, latenza e qualità sono valori simulati per validare l’esperienza.
           </p>
         </div>
 
@@ -159,7 +159,7 @@ export const DataIntegrationsView: React.FC = () => {
             className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-            <span>{syncing ? 'Sincronizzazione in corso...' : 'Forza Sincronizzazione'}</span>
+            <span>{syncing ? 'Simulazione in corso...' : 'Simula sincronizzazione'}</span>
           </button>
         </div>
       </div>
@@ -168,8 +168,8 @@ export const DataIntegrationsView: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
           <span className="text-[10px] uppercase font-mono text-slate-400 font-semibold block">Fonti Integrate</span>
-          <div className="text-2xl font-mono font-extrabold text-white mt-1">8 su 8 Attive</div>
-          <span className="text-[11px] font-mono text-emerald-400 block mt-0.5">100% Operative</span>
+          <div className="text-2xl font-mono font-extrabold text-white mt-1">8 fonti simulate</div>
+          <span className="text-[11px] font-mono text-amber-300 block mt-0.5">Nessuna connessione reale</span>
         </div>
 
         <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">

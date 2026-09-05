@@ -49,8 +49,9 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
   onOpenDecisionModal,
   onBack
 }) => {
+  const actionScenarios = property.actionScenarios ?? [];
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>(
-    property.actionScenarios.find(s => s.isRecommended)?.id || property.actionScenarios[0]?.id
+    actionScenarios.find(s => s.isRecommended)?.id || actionScenarios[0]?.id || ''
   );
 
   // Decline reason micro-modal state
@@ -58,14 +59,14 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
   const [declineReason, setDeclineReason] = useState<string>('Vincoli del proprietario');
   const [declineSuccessToast, setDeclineSuccessToast] = useState(false);
 
-  const selectedScenario = property.actionScenarios.find(s => s.id === selectedScenarioId) || property.actionScenarios[0];
+  const selectedScenario = actionScenarios.find(s => s.id === selectedScenarioId) || actionScenarios[0];
 
   const handleQuickAccept = () => {
-    onOpenDecisionModal(selectedScenario);
+    if (selectedScenario) onOpenDecisionModal(selectedScenario);
   };
 
   const handleQuickModify = () => {
-    onOpenDecisionModal(selectedScenario);
+    if (selectedScenario) onOpenDecisionModal(selectedScenario);
   };
 
   const handleConfirmDecline = () => {
@@ -99,7 +100,7 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
       {declineSuccessToast && (
         <div className="p-3 rounded-xl bg-slate-900 border border-amber-500/40 text-xs text-amber-200 flex items-center gap-2 animate-fade-in">
           <Check className="w-4 h-4 text-amber-400" />
-          <span>Decisione declinata registrata nell'Audit Log. Motivo: "{declineReason}". Il motore ha memorizzato il vincolo.</span>
+          <span>Decisione demo registrata nel log temporaneo. Motivo: "{declineReason}".</span>
         </div>
       )}
 
@@ -247,7 +248,7 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
               </span>
             </div>
             <p className="text-xs text-slate-400 pt-2 font-mono">
-              Integrità dati certificata da 10 fonti notarili e catastali sincronizzate.
+              Scenario demo costruito su 10 fonti notarili e catastali simulate.
             </p>
           </div>
         </div>
@@ -301,7 +302,13 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {property.dimensions.map((dim) => (
+          {property.dimensions.map((dim) => {
+            const benchmark = Math.round(
+              dim.subDimensions.reduce((total, sub) => total + sub.benchmark, 0) /
+              Math.max(1, dim.subDimensions.length)
+            );
+
+            return (
             <div
               key={dim.key}
               onClick={() => onOpenExplainability(dim.key, dim.subDimensions[0])}
@@ -334,9 +341,9 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
                     />
                   </div>
                   <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                    <span>Benchmark Microzona: {dim.benchmark}</span>
-                    <span className={dim.score >= dim.benchmark ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-                      {dim.score >= dim.benchmark ? `+${dim.score - dim.benchmark} pt vs media` : `${dim.score - dim.benchmark} pt vs media`}
+                    <span>Benchmark Microzona: {benchmark}</span>
+                    <span className={dim.score >= benchmark ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+                      {dim.score >= benchmark ? `+${dim.score - benchmark} pt vs media` : `${dim.score - benchmark} pt vs media`}
                     </span>
                   </div>
                 </div>
@@ -359,7 +366,8 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
                 ))}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -368,13 +376,13 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
             <h3 className="text-base font-bold text-white tracking-tight">
-              Evidence & Comparabili Certificati
+              Evidence & Comparabili Simulati
             </h3>
             <p className="text-xs text-slate-400">
-              Rogiti notarili registrati e annunci concorrenti attivi nella microzona per ancoraggio del Valore Congruo.
+              Dataset dimostrativo di rogiti e annunci concorrenti nella microzona per simulare l’ancoraggio del Valore Congruo.
             </p>
           </div>
-          <span className="text-xs font-mono text-emerald-400 font-semibold">Fonte: Agenzia delle Entrate / OMI</span>
+          <span className="text-xs font-mono text-amber-300 font-semibold">Fonte simulata: Agenzia delle Entrate / OMI</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
@@ -463,15 +471,15 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
-            <span className="text-slate-400 text-[10px] uppercase font-semibold">Track Record di Zona</span>
-            <div className="text-2xl font-mono font-bold text-emerald-400">{property.agencyFit.pastSalesInMicrozone18m} Vendite Chiuse</div>
+            <span className="text-slate-400 text-[10px] uppercase font-semibold">Performance su casi simili</span>
+            <div className="text-2xl font-mono font-bold text-emerald-400">{property.agencyFit.historicalPerformanceSimilarPct > 0 ? '+' : ''}{property.agencyFit.historicalPerformanceSimilarPct}%</div>
             <p className="text-[11px] text-slate-400 font-mono">Expertise Territoriale: {property.agencyFit.territoryExpertise}</p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
             <span className="text-slate-400 text-[10px] uppercase font-semibold">Velocità di Liquidità Stimata</span>
-            <div className="text-2xl font-mono font-bold text-cyan-300">{property.agencyFit.estimatedTimeToSaleDays} Giorni</div>
-            <p className="text-[11px] text-slate-400 font-mono">vs Media Mercato: {property.agencyFit.marketAverageTimeToSaleDays} gg (-34%)</p>
+            <div className="text-2xl font-mono font-bold text-cyan-300">{property.estimatedTimeToSaleDays} Giorni</div>
+            <p className="text-[11px] text-slate-400 font-mono">Storico casi simili: {property.agencyFit.historicalTimeToSaleDays} gg</p>
           </div>
         </div>
 
@@ -514,7 +522,7 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
 
         {/* Scenarios Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {property.actionScenarios.map((scen) => {
+          {actionScenarios.map((scen) => {
             const isSelected = scen.id === selectedScenarioId;
             const isValueLoss = scen.targetPrice < property.estimatedFairValue * 0.92;
 
@@ -578,10 +586,16 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
               </div>
             );
           })}
+          {actionScenarios.length === 0 && (
+            <div className="md:col-span-3 rounded-xl border border-amber-500/30 bg-amber-950/20 p-5 text-sm text-amber-200">
+              Action Score non disponibile in questo scenario demo: servono dati operativi sufficienti per generare alternative attendibili.
+            </div>
+          )}
         </div>
       </div>
 
       {/* 8. HUMAN DECISION (AI recommends. Human decides.) */}
+      {selectedScenario && (
       <div className="p-6 rounded-2xl bg-slate-950 border border-emerald-500/40 space-y-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -634,6 +648,7 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
           </div>
         </div>
       </div>
+      )}
 
       {/* Decline Feedback Micro-Modal */}
       {isDeclineModalOpen && (

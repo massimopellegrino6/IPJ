@@ -223,7 +223,7 @@ export interface DataSourceItem {
   category: string;
   name: string;
   provider: string;
-  status: 'CONNECTED' | 'PARTIAL' | 'MISSING';
+  status: 'SIMULATED' | 'CONNECTED' | 'PARTIAL' | 'MISSING';
   freshness: string;
   coveragePct: number;
   qualityScore: number;

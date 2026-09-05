@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS public.decision_log (
     property_id UUID NOT NULL REFERENCES public.property_data(id) ON DELETE CASCADE,
     agent_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     agent_name VARCHAR(128) NOT NULL DEFAULT 'Senior Real Estate Advisor',
-    model_version VARCHAR(32) NOT NULL DEFAULT 'v1.4.0-degradation-aware',
+    model_version VARCHAR(32) NOT NULL DEFAULT 'prototype-v0.1',
     evaluated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     
     -- System Output Snapshot (Deterministic capture)

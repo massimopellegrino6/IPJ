@@ -190,8 +190,8 @@ export const HumanDecisionModal: React.FC<HumanDecisionModalProps> = ({
 
           {/* Principle Reminder */}
           <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/80 text-[10px] font-mono text-slate-400 flex items-center justify-between">
-            <span>Principio: L’AI raccomanda → L’umano decide → Il sistema apprende</span>
-            <span className="text-emerald-400 font-bold">Closed Loop</span>
+            <span>Principio rappresentato: AI recommends → Human decides → System learns</span>
+            <span className="text-amber-300 font-bold">Demo Loop</span>
           </div>
         </div>
 

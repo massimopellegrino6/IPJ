@@ -16,12 +16,12 @@ import {
 import { DATA_SOURCES_CATALOG } from '../../data/mockIntelligenceDatabase';
 
 export const MethodologyView: React.FC = () => {
-  // 6 Core Pillars from Section 17
-  const sixPillars = [
+  // Canonical dimensions used by the prototype dataset and property views.
+  const ratingDimensions = [
     { 
       number: '1',
       name: 'Qualità Immobile', 
-      weight: '20%',
+      weight: '18%',
       desc: 'Layout distributivo, altezza soffitti, luminosità naturale, qualità finiture, stato conservativo impianti ed efficienza energetica.' 
     },
     { 
@@ -33,26 +33,32 @@ export const MethodologyView: React.FC = () => {
     { 
       number: '3',
       name: 'Ambiente & Territorio', 
-      weight: '15%',
+      weight: '12%',
       desc: 'Aree verdi di prossimità, telemetria qualità dell\'aria ARPA (PM2.5/PM10), inquinamento acustico, esposizione climatica e isole di calore.' 
     },
     { 
       number: '4',
       name: 'Rischio & Conformità', 
-      weight: '15%',
+      weight: '14%',
       desc: 'Verifica conformità edilizia/catastale, rischio alluvione/sismico, contenziosi condominiali pendenti e congruità fondo cassa straordinario.' 
     },
     { 
       number: '5',
       name: 'Mercato & Liquidità', 
-      weight: '15%',
+      weight: '16%',
       desc: 'Velocità di assorbimento della microzona, volume annunci concorrenti attivi, giorni medi di vendita (DOM) e pressione della domanda locale.' 
     },
     { 
       number: '6',
       name: 'Economia & Rendimento', 
-      weight: '15%',
-      desc: 'Prezzo unitario congruo rispetto ai rogiti notarili storici, yield locativo potenziale, rivalutazione di zona e marginalità dell\'operazione.' 
+      weight: '12%',
+      desc: 'Prezzo unitario congruo rispetto ai comparabili simulati, yield locativo potenziale, rivalutazione di zona e marginalità dell\'operazione.'
+    },
+    {
+      number: '7',
+      name: 'Macro & Tempo',
+      weight: '8%',
+      desc: 'Tassi di interesse, condizioni del credito, accessibilità economica, dinamica demografica e fase del ciclo immobiliare.'
     }
   ];
 
@@ -67,7 +73,7 @@ export const MethodologyView: React.FC = () => {
           Methodology & System Intelligence
         </h1>
         <p className="text-sm text-slate-400 mt-1 max-w-3xl">
-          Nessuna scatola nera ("black-box AI"). Spiegazione scientifica del calcolo del Rating, del ruolo della Confidenza e del principio di governance fiduciaria.
+          Metodologia dimostrativa del Prototype v0.1: struttura del Rating, ruolo della Confidence e principio di governance human-in-the-loop.
         </p>
       </div>
 
@@ -120,20 +126,20 @@ export const MethodologyView: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. I 6 PILASTRI METODOLOGICI (Richiesti esplicitamente da Section 17) */}
+      {/* 2. CANONICAL PROTOTYPE DIMENSIONS */}
       <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-cyan-400">
             <Layers className="w-5 h-5" />
             <h2 className="text-lg font-bold text-white tracking-tight">
-              I 6 Pilastri Metodologici
+              Le 7 Dimensioni del Rating
             </h2>
           </div>
-          <span className="text-xs font-mono text-slate-400">Pesi Istituzionali in Validazione</span>
+          <span className="text-xs font-mono text-amber-300">Pesi dimostrativi da validare</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sixPillars.map((pillar) => (
+          {ratingDimensions.map((pillar) => (
             <div
               key={pillar.number}
               className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2 text-xs"
@@ -184,9 +190,9 @@ export const MethodologyView: React.FC = () => {
             Come il sistema impara continuamente:
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-xs text-slate-400">
-            <li><strong className="text-white">Audit delle Decisioni:</strong> Ogni proposta accettata, modificata o rifiutata con motivazione viene registrata con immutabilità.</li>
-            <li><strong className="text-white">Confronto con Rogiti Notarili:</strong> Alla trascrizione notarile della compravendita, il prezzo reale e i giorni effettivi sul mercato vengono confrontati con le stime.</li>
-            <li><strong className="text-white">Ricalibrazione Mensile:</strong> I coefficienti edonici di microzona vengono aggiornati per ridurre progressivamente l'errore quadratico medio (MAE).</li>
+            <li><strong className="text-white">Audit delle Decisioni:</strong> Il prototipo simula la registrazione di ogni proposta accettata, modificata o rifiutata con motivazione.</li>
+            <li><strong className="text-white">Confronto con gli Outcome:</strong> Nel prodotto futuro, prezzo reale e giorni effettivi sul mercato saranno confrontati con le stime.</li>
+            <li><strong className="text-white">Ricalibrazione:</strong> Il ciclo di aggiornamento del modello è rappresentato nella demo, ma richiede dati storici reali per essere validato.</li>
           </ul>
         </div>
       </div>

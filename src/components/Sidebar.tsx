@@ -23,6 +23,7 @@ export type MainNavTab =
   | 'decision_center' 
   | 'analytics' 
   | 'clients_demand' 
+  | 'property_intelligence'
   | 'organization' 
   | 'data_integrations' 
   | 'methodology' 
@@ -102,7 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Decision Intelligence
             </span>
             <span className="text-[10px] text-slate-400 font-medium">
-              Real Estate System • v0.1
+              Prototype v0.1 • Demo data
             </span>
           </div>
         </div>
@@ -150,12 +151,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-slate-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Intelligence Engine
+            Prototype Engine
           </span>
-          <span className="text-slate-400 font-medium">Attivo</span>
+          <span className="text-amber-300 font-medium">Simulazione</span>
         </div>
         <div className="text-[10px] text-slate-400">
-          Single Source of Truth: 26 Asset
+          Dataset dimostrativo: 26 asset
         </div>
       </div>
     </aside>

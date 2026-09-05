@@ -287,7 +287,7 @@ export const OrganizationSettingsView: React.FC<OrganizationSettingsViewProps> =
             I feedback umani (Accept, Modify, Decline con motivazione) vengono aggregati a intervalli mensili per ricalibrare i residui delle stime di prezzo congruo e liquidità senza introdurre derive arbitrarie.
           </p>
           <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 bg-emerald-950/20 border border-emerald-500/20 p-2.5 rounded-lg">
-            <span>Stato: Ciclo Closed-Loop Sincronizzato con Conservatoria Notarile</span>
+            <span>Stato prototipo: ciclo closed-loop simulato su dati dimostrativi</span>
           </div>
         </div>
       </div>

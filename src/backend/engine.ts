@@ -29,7 +29,7 @@ import {
 // Architectural Constants & Weights
 // ----------------------------------------------------------------------------
 
-const MODEL_VERSION = 'v1.4.0-degradation-aware';
+const MODEL_VERSION = 'prototype-v0.1';
 
 /**
  * Weights assigned to the 4 pillars of the dynamic rating score.

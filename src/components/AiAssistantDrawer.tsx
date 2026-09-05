@@ -31,10 +31,10 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
     {
       id: 'init_1',
       sender: 'assistant',
-      text: 'Co-pilota Decisionale PropTech attivo. Opero esclusivamente su dati deterministici della piattaforma (dimensioni del Rating, benchmark OMI, rogiti notarili e pool acquirenti CRM). Chiedimi anomalie di portafoglio, variazioni di rating o screening delle priorità.',
+      text: 'Co-pilota Decisionale del prototipo. Le risposte sono generate su un dataset dimostrativo che simula dimensioni del Rating, benchmark OMI, comparabili e pool acquirenti CRM. Chiedimi anomalie di portafoglio, variazioni di rating o screening delle priorità.',
       evidence: [
-        { label: 'Dataset di ancoraggio', value: '26 Immobili Istituzionali Verificati' },
-        { label: 'Versione Modello', value: 'v0.1 Core Quantitativo' }
+        { label: 'Dataset di ancoraggio', value: '26 immobili demo' },
+        { label: 'Versione prototipo', value: 'v0.1' }
       ]
     }
   ]);
@@ -69,7 +69,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
       replyText = 'Via Appia Nuova 245 ha attualmente un Rating di 84/100 (+4 pt negli ultimi 30 giorni). Precedentemente a inizio luglio era sceso a 77 a causa di 6 annunci concorrenti immessi ad Appio Latino. Il rating ha poi recuperato poiché il venditore ha posizionato il prezzo a 349.000 € (-7,7% sotto il Valore Congruo di 378.000 €) e la domanda qualificata per la linea Metro A è aumentata del +4,8%.';
       evidenceList = [
         { label: 'Delta Valore Congruo', value: '-7,7% (349k € vs 378k €)' },
-        { label: 'Rogiti notarili verificati', value: '11 compravendite negli ultimi 6 mesi' },
+        { label: 'Comparabili simulati', value: '11 compravendite negli ultimi 6 mesi' },
         { label: 'Compatibilità Agenzia', value: '94/100 (23 acquirenti attivi in target)' }
       ];
       suggested = { label: 'Ispeziona Via Appia Nuova 245', propertyId: 'prop_rm_appia_245' };
@@ -101,7 +101,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
       replyText = `Analisi telemetria territoriale: Sul portafoglio monitorato di ${properties.length} immobili, il Rating medio è di 76/100 con confidenza media dell'87%. La velocità di liquidità è più marcata a Milano (Porta Nuova/Isola: 32gg mediano) e Roma (Appio Latino/Prati: 52gg mediano).`;
       evidenceList = [
         { label: 'Opportunità Attive', value: '18 asset ad alto potenziale' },
-        { label: 'Freschezza Dati', value: 'Sincronizzato 4 ore fa' }
+        { label: 'Freschezza dati demo', value: 'Scenario aggiornato 4 ore fa' }
       ];
     }
 
@@ -132,10 +132,10 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({
               <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
                 Co-pilota Decision Intelligence
                 <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                  Dati Certificati
+                  Demo guidata
                 </span>
               </h3>
-              <p className="text-[10px] text-slate-400">Ancorato a evidenze di piattaforma e rogiti notarili</p>
+              <p className="text-[10px] text-slate-400">Risposte simulate sul dataset del prototipo</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700">

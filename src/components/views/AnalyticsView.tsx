@@ -105,7 +105,7 @@ export const AnalyticsView: React.FC = () => {
 
         <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
           <BrainCircuit className="w-4 h-4 text-emerald-400" />
-          <span>Closed-Loop Learning Attivo</span>
+          <span>Closed-Loop Learning · Simulazione</span>
         </div>
       </div>
 
