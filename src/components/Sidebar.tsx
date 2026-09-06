@@ -100,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div className="flex flex-col">
             <span className="text-xs font-bold text-white tracking-wider flex items-center gap-1.5 uppercase font-mono">
-              Decision Intelligence
+              IPJ
             </span>
             <span className="text-[10px] text-slate-400 font-medium">
               Prototype v0.1 • Demo data
