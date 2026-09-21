@@ -24,13 +24,18 @@ import {
   Check,
   XCircle,
   Edit3,
-  AlertTriangle
+  AlertTriangle,
+  BrainCircuit,
+  Eye
 } from 'lucide-react';
 import { PropertyItem, DimensionBreakdown, SubDimension, ActionScenario } from '../../types/intelligence';
 import { RatingBadge } from '../badges/RatingBadge';
 import { ConfidenceBadge } from '../badges/ConfidenceBadge';
 import { AgencyFitBadge } from '../badges/AgencyFitBadge';
 import { ActionScoreBadge } from '../badges/ActionScoreBadge';
+import { SensitivityScenarioSimulator } from '../SensitivityScenarioSimulator';
+import { PropertyGallery } from '../property/PropertyGallery';
+import { PropertyLocationMap } from '../property/PropertyLocationMap';
 
 interface PropertyIntelligenceViewProps {
   property: PropertyItem;
@@ -189,6 +194,12 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
             <span className="font-mono font-bold text-emerald-400 text-sm mt-0.5 block uppercase">{property.priority}</span>
           </div>
         </div>
+      </div>
+
+      {/* GALLERIA IMMAGINI & LOCALIZZAZIONE GEOGRAFICA CON MAPPA */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PropertyGallery property={property} />
+        <PropertyLocationMap property={property} />
       </div>
 
       {/* 2. REAL ESTATE RATING (AREA CENTRALE & STRIP ECONOMICA SEPARATA) */}
@@ -592,7 +603,29 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
             </div>
           )}
         </div>
+
+        {/* Dynamic Continuous Sensitivity Manipulation (v1.0 Section 5.3 B) */}
+        <div className="pt-4 border-t border-slate-800/80">
+          <SensitivityScenarioSimulator
+            property={property}
+            onApplyScenario={(customP, timeH, inferred) => {
+              const customScenario: ActionScenario = {
+                id: `custom_scen_${Date.now()}`,
+                label: `Scenario Personalizzato (€${customP.toLocaleString()})`,
+                targetPrice: customP,
+                priceDeltaPct: Number((((customP - property.askingPrice) / property.askingPrice) * 100).toFixed(1)),
+                saleProbability90d: 82,
+                expectedTimeToSaleDays: timeH,
+                actionScore: 89,
+                rationale: inferred || 'Scenario personalizzato calibrato tramite slider continuo di sensibilità.',
+                isRecommended: false
+              };
+              onOpenDecisionModal(customScenario);
+            }}
+          />
+        </div>
       </div>
+
 
       {/* 8. HUMAN DECISION (AI recommends. Human decides.) */}
       {selectedScenario && (
@@ -650,57 +683,111 @@ export const PropertyIntelligenceView: React.FC<PropertyIntelligenceViewProps> =
       </div>
       )}
 
-      {/* Decline Feedback Micro-Modal */}
+      {/* v1.0 Adaptive Feedback & Inferred Motivation Modal (Section 5.1 & 5.3 C) */}
       {isDeclineModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-4 text-slate-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-white">Rifiuta Raccomandazione</h3>
-              <button onClick={() => setIsDeclineModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
-            </div>
-            <p className="text-xs text-slate-400">
-              Perché ritieni non opportuno applicare questa raccomandazione? Questa motivazione alimenta il modello di apprendimento closed-loop.
-            </p>
-
-            <div className="space-y-2 text-xs">
-              {[
-                'Vincoli del proprietario',
-                'Giudizio professionale agente',
-                'Strategia alternativa pianificata',
-                'Nuove informazioni non ancora a sistema',
-                'Altro'
-              ].map((reason) => (
-                <label
-                  key={reason}
-                  className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
-                    declineReason === reason ? 'bg-slate-900 border-emerald-500/60 text-white' : 'border-slate-800 text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="declineReason"
-                    value={reason}
-                    checked={declineReason === reason}
-                    onChange={(e) => setDeclineReason(e.target.value)}
-                    className="accent-emerald-500"
-                  />
-                  <span>{reason}</span>
-                </label>
-              ))}
+          <div className="w-full max-w-xl bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-5 text-slate-200 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <BrainCircuit className="w-5 h-5 text-emerald-400" />
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Feedback Implicito & Inferenza Bayesiana (v1.0)
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    Principio: "Observe first. Ask only when necessary." (Sezione 5.3 C)
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setIsDeclineModalOpen(false)} className="text-slate-400 hover:text-white p-1">✕</button>
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
+            {/* Level 1: Observed Fact */}
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-[10px] uppercase font-bold text-cyan-400 flex items-center gap-1.5 font-mono">
+                <Eye className="w-3.5 h-3.5" />
+                <span>Livello 1 — Fatto Certo Osservato</span>
+              </span>
+              <p className="text-xs text-slate-300 font-mono">
+                Divergenza rispetto allo scenario raccomandato per: <strong className="text-white">{property.title}</strong>
+              </p>
+            </div>
+
+            {/* Level 2: Inferred Motivation */}
+            <div className="p-3.5 rounded-xl bg-slate-900/80 border border-emerald-500/30 space-y-2">
+              <span className="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1.5 font-mono">
+                <BrainCircuit className="w-3.5 h-3.5" />
+                <span>Livello 2 — Motivazione Inferita (Distribuzione a Priori)</span>
+              </span>
+              <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+                <div className="p-2 rounded bg-slate-950 border border-emerald-500/30">
+                  <span className="text-[10px] text-slate-400 block">P(OWNER_CONSTRAINT)</span>
+                  <span className="text-emerald-400 font-bold text-sm">62% (Priorità)</span>
+                </div>
+                <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">P(MODEL_DISAGREE)</span>
+                  <span className="text-slate-200 font-bold text-sm">21%</span>
+                </div>
+                <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">P(TIMING_DELAY)</span>
+                  <span className="text-slate-200 font-bold text-sm">17%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Level 3: Adaptive Policy */}
+            <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-1.5 text-xs text-emerald-200">
+              <div className="font-bold flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Soglia Adattiva (Confidenza &gt; 75%): Nessun blocco operativo</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed font-mono">
+                Il sistema adotta l'inferenza probabilistica più plausibile senza obbligare a compilare questionari. Nei giorni successivi monitorerà l'attività dell'annuncio per aggiornare i pesi.
+              </p>
+            </div>
+
+            {/* Optional 1-Click Override */}
+            <div className="space-y-1.5 pt-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 font-mono">
+                Rettifica Facoltativa 1-Click (Solo se desideri sovrascrivere l'inferenza):
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {[
+                  'Vincoli del proprietario (Rigidità negoziale)',
+                  'Informazioni asset non censite (Ristrutturato)',
+                  'Trattativa riservata già avviata con acquirente',
+                  'In disaccordo con i comparabili adottati'
+                ].map((reason) => (
+                  <button
+                    key={reason}
+                    type="button"
+                    onClick={() => setDeclineReason(reason)}
+                    className={`p-2.5 rounded-lg border text-left text-xs font-mono transition-all cursor-pointer ${
+                      declineReason === reason
+                        ? 'bg-slate-900 border-emerald-500 text-emerald-300 font-bold ring-1 ring-emerald-500/30'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2.5">
               <button
                 onClick={() => setIsDeclineModalOpen(false)}
-                className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white"
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white cursor-pointer"
               >
                 Annulla
               </button>
               <button
                 onClick={handleConfirmDecline}
-                className="px-4 py-1.5 rounded-lg bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold text-xs"
+                className="px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                Registra Rifiuto
+                <Check className="w-4 h-4" />
+                <span>Conferma Senza Interruzione (Observe First)</span>
               </button>
             </div>
           </div>

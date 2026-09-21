@@ -3,6 +3,7 @@ import { Sidebar, MainNavTab } from './components/Sidebar';
 import { Header } from './components/Header';
 import { OverviewView } from './components/views/OverviewView';
 import { OpportunitiesView } from './components/views/OpportunitiesView';
+import { PropertiesView } from './components/views/PropertiesView';
 import { PropertyIntelligenceView } from './components/views/PropertyIntelligenceView';
 import { DecisionCenterView } from './components/views/DecisionCenterView';
 import { MarketIntelligenceView } from './components/views/MarketIntelligenceView';
@@ -27,7 +28,7 @@ import {
 import { PropertyItem, SubDimension, ActionScenario, DecisionTask, DecisionHistoryItem } from './types/intelligence';
 import { CheckCircle2 } from 'lucide-react';
 
-const PROTOTYPE_VERSION = 'v0.1';
+const PROTOTYPE_VERSION = 'v1.0 (Decision Intelligence)';
 
 export default function App() {
   // Navigation State
@@ -161,6 +162,13 @@ export default function App() {
     setIsCompareModalOpen(true);
   };
 
+  // Add new property to master database
+  const handleAddProperty = (newProp: PropertyItem) => {
+    setProperties(prev => [newProp, ...prev]);
+    setToastMessage(`Nuovo immobile ${newProp.code} aggiunto con successo al Registro Master!`);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 antialiased font-sans">
       {/* 1. Compact Sidebar */}
@@ -207,6 +215,14 @@ export default function App() {
               properties={filteredProperties}
               onSelectProperty={handleSelectProperty}
               onCompareProperties={handleCompareProperties}
+            />
+          )}
+
+          {activeTab === 'properties' && (
+            <PropertiesView
+              properties={filteredProperties}
+              onSelectProperty={handleSelectProperty}
+              onAddProperty={handleAddProperty}
             />
           )}
 
@@ -266,7 +282,10 @@ export default function App() {
           )}
 
           {(activeTab === 'organization' || activeTab === 'settings') && (
-            <OrganizationSettingsView mode={activeTab === 'organization' ? 'organization' : 'settings'} />
+            <OrganizationSettingsView 
+              mode={activeTab === 'organization' ? 'organization' : 'settings'} 
+              properties={properties}
+            />
           )}
         </main>
       </div>

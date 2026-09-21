@@ -4,7 +4,10 @@ import {
   DecisionHistoryItem, 
   DataSourceItem, 
   TerritoryMetric,
-  DimensionBreakdown 
+  DimensionBreakdown,
+  FormalDecisionLogEvent,
+  NorthStarFramework,
+  FormalDecisionContext
 } from '../types/intelligence';
 
 // Helper to create the 7 standard dimensions
@@ -2576,3 +2579,280 @@ export const TERRITORY_METRICS: TerritoryMetric[] = [
     opportunityCount: 9
   }
 ];
+
+/**
+ * ====================================================================
+ * DATASET ISTITUZIONALE v1.0: METRICHE NORTH STAR & DECISION LOG UNIFICATO
+ * ====================================================================
+ */
+
+export const MOCK_NORTH_STAR_METRICS: NorthStarFramework = {
+  // 8.1 Indice di Compressione Temporale (ΔTTS) = ((63 - 88) / 88) * 100 = -28.4%
+  deltaTTSPct: -28.4,
+  ttsRealAvgDays: 63,
+  ttsBenchmarkAvgDays: 88,
+
+  // 8.2 Realization Rate di Mandato (RR) = Prezzo Finale Transato / Prezzo Raccomandato (target ~1.00)
+  realizationRate: 0.984, // 98.4% di aderenza al valore congruo stimato
+
+  // 8.3 Tasso di Conversione Mandato (ΔMandate Conversion) = 84.5% vs 62.0% baseline pre-adozione
+  mandateConversionPct: 84.5,
+  baselineConversionPct: 62.0,
+  mandateConversionDeltaPct: +22.5
+};
+
+export const MOCK_FORMAL_DECISION_LOGS: FormalDecisionLogEvent[] = [
+  {
+    event_id: 'evt_98412_2026',
+    timestamp: '2026-09-06T10:30:00Z',
+    decision_context: {
+      property_id: 'prop_rm_nomentana_221',
+      property_title: 'Via Nomentana 221 — Roma',
+      agent_id: 'usr_ag_902',
+      agent_name: 'Marco Valente',
+      agency_id: 'branch_roma_nord_01',
+      objective: 'MAX_LIQUIDITY_60D',
+      mandate_days_remaining: 38
+    },
+    rating_snapshot: {
+      real_estate_rating: 82,
+      agency_fit_score: 94,
+      confidence: 0.88,
+      dimensions: { price_fit: 71, demand: 86, liquidity: 78, location: 84 }
+    },
+    recommendation_issued: {
+      action_type: 'PRICE_REDUCTION',
+      current_price: 315000,
+      recommended_price: 299000,
+      action_score: 91,
+      predicted_probability_60d: 0.68,
+      expected_time_to_sale_days: 38
+    },
+    observed_human_decision: {
+      event_type: 'PARTIAL_PRICE_ADJUSTMENT',
+      applied_price: 308000,
+      delta_vs_recommendation: 9000,
+      slider_release_point: 308000
+    },
+    behavioral_signals_48h: [
+      { signal: 'DOWNLOAD_OWNER_NEGOTIATION_REPORT', timestamp: '2026-09-06T10:45:12Z', intensity: 'HIGH' },
+      { signal: 'OPEN_COMPARABLES_DRILLDOWN', timestamp: '2026-09-06T11:02:00Z', duration_seconds: 18, intensity: 'MEDIUM' },
+      { signal: 'NO_CRM_PRICE_OBJECTION_RECORDED', timestamp: '2026-09-08T10:30:00Z', intensity: 'LOW' }
+    ],
+    inferred_motivation: {
+      primary_category: 'EXTERNAL_CONSTRAINT',
+      sub_category: 'OWNER_CONSTRAINT',
+      confidence_score: 0.82,
+      status: 'CONSOLIDATED',
+      probability_distribution: {
+        EXTERNAL_CONSTRAINT: 0.65,
+        MODEL_DISAGREEMENT: 0.15,
+        COMMERCIAL_TIMING: 0.12,
+        INFORMATION_GAP: 0.05,
+        STRATEGIC_PREFERENCE: 0.02,
+        UNKNOWN: 0.01
+      },
+      bayesianUpdatesCount: 3
+    },
+    operational_effort: {
+      avgLeadContactTimeHours: 1.8,
+      listingFreshnessDays: 2,
+      adSpendAllocatedEuros: 450,
+      scheduledVisitsCompletedRatio: 0.95,
+      isAttributedToOperationalInertia: false,
+      attributionReason: 'Effort commerciale esemplare; feedback oggettivo di mercato.'
+    },
+    outcome_tracking: {
+      short_term_proxies: {
+        windowDays: 14,
+        views_delta_pct: '+52%',
+        leads_delta_14d: '+45%',
+        visits_scheduled_14d: 4,
+        offers_received_14d: 1,
+        price_feedback_alignment: 'FAVORABLE',
+        immediateWeightUpdateApplied: true
+      },
+      final_outcome: {
+        closed: true,
+        sale_price: 305000,
+        days_on_market_total: 68,
+        mandate_outcome: 'COMPLETED',
+        price_delta_vs_ai_pct: +1.97,
+        time_delta_vs_ai_days: +8
+      }
+    },
+    learning_segregation: {
+      world_model_impact: 'Elasticità prezzo/tempo validata: soglia di resistenza acquirente confermata a €305k per il quadrante Nomentano.',
+      decision_model_impact: 'Registrata rigidità negoziale venditore (+€9k rispetto a stima edonica iniziale). Modello ha adeguato il buffer consigliato per mandati in scadenza <45gg.',
+      anti_bias_applied: true
+    }
+  },
+  {
+    event_id: 'evt_74219_2026',
+    timestamp: '2026-08-14T14:15:00Z',
+    decision_context: {
+      property_id: 'prop_rm_francia_42',
+      property_title: 'Corso Francia 42 — Roma',
+      agent_id: 'usr_ag_903',
+      agent_name: 'Elena Baroni',
+      agency_id: 'branch_roma_nord_01',
+      objective: 'MAX_REALIZATION_PRICE',
+      mandate_days_remaining: 74
+    },
+    recommendation_issued: {
+      action_type: 'TARGETED_CLIENT_MATCHING',
+      current_price: 495000,
+      recommended_price: 495000,
+      action_score: 94,
+      predicted_probability_60d: 0.76,
+      expected_time_to_sale_days: 34
+    },
+    rating_snapshot: {
+      real_estate_rating: 81,
+      agency_fit_score: 96,
+      confidence: 0.93,
+      dimensions: { price_fit: 82, demand: 89, liquidity: 84, location: 88 }
+    },
+    observed_human_decision: {
+      event_type: 'ACCEPTED_RECOMMENDATION',
+      applied_price: 495000,
+      delta_vs_recommendation: 0
+    },
+    behavioral_signals_48h: [
+      { signal: 'INVITED_TOP_5_CRM_BUYERS', timestamp: '2026-08-14T15:30:00Z', intensity: 'HIGH' },
+      { signal: 'GENERATED_DOSSIER_CONFIDENTIAL', timestamp: '2026-08-14T16:00:00Z', duration_seconds: 45, intensity: 'HIGH' }
+    ],
+    inferred_motivation: {
+      primary_category: 'STRATEGIC_PREFERENCE',
+      sub_category: 'MARGIN_OVER_VELOCITY',
+      confidence_score: 0.91,
+      status: 'CONSOLIDATED',
+      probability_distribution: {
+        STRATEGIC_PREFERENCE: 0.85,
+        EXTERNAL_CONSTRAINT: 0.05,
+        COMMERCIAL_TIMING: 0.04,
+        INFORMATION_GAP: 0.03,
+        MODEL_DISAGREEMENT: 0.02,
+        UNKNOWN: 0.01
+      },
+      bayesianUpdatesCount: 4
+    },
+    operational_effort: {
+      avgLeadContactTimeHours: 0.9,
+      listingFreshnessDays: 1,
+      adSpendAllocatedEuros: 600,
+      scheduledVisitsCompletedRatio: 1.0,
+      isAttributedToOperationalInertia: false,
+      attributionReason: 'Rapidità di contatto eccellente; visite concentrate in 72 ore.'
+    },
+    outcome_tracking: {
+      short_term_proxies: {
+        windowDays: 14,
+        views_delta_pct: '+68%',
+        leads_delta_14d: '+60%',
+        visits_scheduled_14d: 7,
+        offers_received_14d: 2,
+        price_feedback_alignment: 'FAVORABLE',
+        immediateWeightUpdateApplied: true
+      },
+      final_outcome: {
+        closed: true,
+        sale_price: 490000,
+        days_on_market_total: 29,
+        mandate_outcome: 'COMPLETED',
+        price_delta_vs_ai_pct: -1.01,
+        time_delta_vs_ai_days: -5
+      }
+    },
+    learning_segregation: {
+      world_model_impact: 'Feature plusvalenza: la presenza di acquirenti con pre-delibera mutuo bancario riduce il tempo di assorbimento del 32% rispetto alla media del comparto Fleming.',
+      decision_model_impact: 'Strategia di matching proprietario confermata come prioritari vs listing su portale generico.',
+      anti_bias_applied: false
+    }
+  },
+  {
+    event_id: 'evt_61208_2026',
+    timestamp: '2026-07-20T09:10:00Z',
+    decision_context: {
+      property_id: 'prop_rm_roma_18',
+      property_title: 'Via Roma 18 — Roma',
+      agent_id: 'usr_ag_901',
+      agent_name: 'Giulia De Angelis',
+      agency_id: 'branch_roma_centro',
+      objective: 'PORTFOLIO_ROTATION',
+      mandate_days_remaining: 22
+    },
+    recommendation_issued: {
+      action_type: 'PRICE_REDUCTION',
+      current_price: 365000,
+      recommended_price: 330000,
+      action_score: 88,
+      predicted_probability_60d: 0.72,
+      expected_time_to_sale_days: 42
+    },
+    rating_snapshot: {
+      real_estate_rating: 69,
+      agency_fit_score: 78,
+      confidence: 0.89,
+      dimensions: { price_fit: 58, demand: 64, liquidity: 62, location: 82 }
+    },
+    observed_human_decision: {
+      event_type: 'HOLD_MAINTAINED',
+      applied_price: 365000,
+      delta_vs_recommendation: 35000,
+      slider_release_point: 365000
+    },
+    behavioral_signals_48h: [
+      { signal: 'REJECTED_PRICE_ADVICE_NOTE_SELLER_UNWILLING', timestamp: '2026-07-20T09:45:00Z', intensity: 'HIGH' },
+      { signal: 'NO_LISTING_UPDATE_EXECUTED', timestamp: '2026-07-22T09:00:00Z', intensity: 'MEDIUM' }
+    ],
+    inferred_motivation: {
+      primary_category: 'EXTERNAL_CONSTRAINT',
+      sub_category: 'OWNER_CONSTRAINT',
+      confidence_score: 0.94,
+      status: 'CONSOLIDATED',
+      probability_distribution: {
+        EXTERNAL_CONSTRAINT: 0.88,
+        MODEL_DISAGREEMENT: 0.05,
+        COMMERCIAL_TIMING: 0.04,
+        INFORMATION_GAP: 0.02,
+        STRATEGIC_PREFERENCE: 0.01,
+        UNKNOWN: 0.00
+      },
+      bayesianUpdatesCount: 5
+    },
+    operational_effort: {
+      avgLeadContactTimeHours: 6.4,
+      listingFreshnessDays: 19,
+      adSpendAllocatedEuros: 100,
+      scheduledVisitsCompletedRatio: 0.4,
+      isAttributedToOperationalInertia: true,
+      attributionReason: 'Effort-Adjusted Attribution: Inattività dell annuncio (nessun aggiornamento fotografico, tempo risposta lead >6h). Escluso dalla calibrazione del World Model.'
+    },
+    outcome_tracking: {
+      short_term_proxies: {
+        windowDays: 21,
+        views_delta_pct: '-18%',
+        leads_delta_14d: '-25%',
+        visits_scheduled_14d: 1,
+        offers_received_14d: 0,
+        price_feedback_alignment: 'RESISTANCE',
+        immediateWeightUpdateApplied: false
+      },
+      final_outcome: {
+        closed: false,
+        sale_price: 0,
+        days_on_market_total: 135,
+        mandate_outcome: 'EXPIRED',
+        price_delta_vs_ai_pct: 0,
+        time_delta_vs_ai_days: +93
+      }
+    },
+    learning_segregation: {
+      world_model_impact: 'CLAUSOLA ANTI-BIAS ATTIVATA: L insuccesso dell incarico è imputato alla mancata adesione alla correzione di prezzo combinata a disattenzione operativa. Il World Model NON degrada la stima di liquidità della microzona.',
+      decision_model_impact: 'Registrata divergenza negativa e costo dell inerzia decisionale nel Decision Model dell agenzia (-€10.950 di mancato incasso commissionale per decadenza mandato).',
+      anti_bias_applied: true
+    }
+  }
+];
+

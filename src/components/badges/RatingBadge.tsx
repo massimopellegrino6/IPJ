@@ -112,7 +112,7 @@ export const RatingBadge: React.FC<RatingBadgeProps> = ({
 
   if (size === 'sm') {
     return (
-      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border ${config.border} ${config.bg} font-mono text-xs font-bold`}>
+      <span className={`inline-flex items-center justify-center ${showLabel ? 'gap-1.5 px-2' : 'px-2 min-w-[32px]'} py-0.5 rounded border ${config.border} ${config.bg} font-mono text-xs font-bold`}>
         <span>{score}</span>
         {showLabel && <span className="text-[10px] uppercase font-sans font-medium tracking-wide opacity-90">{config.label}</span>}
       </span>

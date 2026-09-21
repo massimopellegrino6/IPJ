@@ -13,14 +13,16 @@ import {
   ArrowRight,
   Activity,
   Users,
-  CheckCircle2,
   Clock,
-  Radio
+  Radio,
+  Zap,
+  BrainCircuit
 } from 'lucide-react';
 import { PropertyItem } from '../../types/intelligence';
 import { RatingBadge } from '../badges/RatingBadge';
 import { ConfidenceBadge } from '../badges/ConfidenceBadge';
 import { AgencyFitBadge } from '../badges/AgencyFitBadge';
+import { useDecisionStore } from '../../context/DecisionStoreContext';
 
 interface OverviewViewProps {
   properties: PropertyItem[];
@@ -35,6 +37,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onNavigateToDecisions,
   onNavigateToOpportunities
 }) => {
+  const { decisionLogs, getLatestLogForProperty } = useDecisionStore();
   // Find properties in the database to bind directly to the cards
   const propRoma18 = properties.find(p => p.id === 'prop_rm_roma_18') || properties[0];
   const propFrancia42 = properties.find(p => p.id === 'prop_rm_francia_42') || properties[1];
@@ -185,7 +188,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={onNavigateToOpportunities}
             className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-200 border border-slate-700/80 transition-colors flex items-center gap-1.5"
@@ -358,6 +361,29 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                     {item.recommendedAction}
                   </div>
                 </div>
+
+                {/* Short-Term Proxy Telemetry if asset has active decision log */}
+                {(() => {
+                  const log = getLatestLogForProperty(item.property.id);
+                  if (log && log.outcomeTracking.shortTermProxies.leadsDelta14d) {
+                    return (
+                      <div className="p-2.5 rounded-lg bg-emerald-950/25 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs font-mono">
+                        <div className="flex items-center gap-1.5 text-emerald-300 font-bold text-[10px]">
+                          <Zap className="w-3 h-3 text-emerald-400" />
+                          <span>Proxy 14–21d Attivo:</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px]">
+                          <span className="text-white font-bold">{log.outcomeTracking.shortTermProxies.leadsDelta14d} leads</span>
+                          <span className="text-slate-500">•</span>
+                          <span className="text-cyan-300 font-bold">{log.outcomeTracking.shortTermProxies.visitsScheduled14d} visite</span>
+                          <span className="text-slate-500">•</span>
+                          <span className="text-emerald-400 font-bold">{log.outcomeTracking.shortTermProxies.priceFeedbackSummary}</span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               {/* Card Footer: Action Score, Confidence & CTA */}
@@ -507,6 +533,95 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <span>Effetto Repricing: +2.1 pt</span>
             <span>Effetto Dismissione Asset Deboli: +2.5 pt</span>
           </div>
+        </div>
+      </div>
+
+      {/* 5. CLOSED-LOOP FLYWHEEL & 14-21D PROXY OUTCOME TELEMETRY */}
+      <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800/80 space-y-4 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <BrainCircuit className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                <span>Closed-Loop Telemetry: Outcome Tracking a Breve Termine (14–21gg)</span>
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold uppercase">
+                  Product Thesis v1.0
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Verifica empirica delle delibere: segnali intermedi oggettivi raccolti prima del rogito (Section 5.4).
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={onNavigateToDecisions}
+            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+          >
+            <span>Apri Registro Decisionale Completo</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* 14-21d Monitored Items Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {decisionLogs.slice(0, 4).map((log) => {
+            const hasProxies = Boolean(log.outcomeTracking.shortTermProxies?.leadsDelta14d);
+
+            return (
+              <div
+                key={log.eventId}
+                className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3 font-mono text-xs"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-sans font-bold text-sm">
+                      {log.decisionContext.propertyTitle}
+                    </span>
+                    <span className="text-[10px] text-slate-400">({log.decisionContext.microzone})</span>
+                  </div>
+
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
+                    log.observedHumanDecision.eventType === 'ACCEPTED' ? 'bg-emerald-500/20 text-emerald-300' :
+                    log.observedHumanDecision.eventType === 'PARTIAL_PRICE_ADJUSTMENT' ? 'bg-cyan-500/20 text-cyan-300' :
+                    'bg-slate-800 text-slate-300'
+                  }`}>
+                    {log.observedHumanDecision.eventType}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-400 bg-slate-950 p-2 rounded-lg border border-slate-800">
+                  <span>Prezzo Adottato: <strong className="text-white">€{log.observedHumanDecision.appliedPrice.toLocaleString()}</strong></span>
+                  <span>Motivazione: <strong className="text-emerald-400">{log.inferredMotivation.primaryCategory}</strong></span>
+                </div>
+
+                {hasProxies && (
+                  <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                    <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                      <span className="text-slate-400 block uppercase">Leads 14gg</span>
+                      <span className="text-emerald-400 font-bold text-xs">
+                        {log.outcomeTracking.shortTermProxies.leadsDelta14d}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                      <span className="text-slate-400 block uppercase">Visite</span>
+                      <span className="text-white font-bold text-xs">
+                        {log.outcomeTracking.shortTermProxies.visitsScheduled14d} fissate
+                      </span>
+                    </div>
+                    <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                      <span className="text-slate-400 block uppercase">Feedback</span>
+                      <span className="text-cyan-300 font-bold text-[10px] block truncate">
+                        {log.outcomeTracking.shortTermProxies.priceFeedbackSummary}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

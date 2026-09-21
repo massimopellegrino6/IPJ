@@ -12,24 +12,57 @@ import {
   Activity,
   Briefcase,
   Compass,
-  CheckCircle2
+  CheckCircle2,
+  FileDown,
+  RefreshCw,
+  FileText
 } from 'lucide-react';
+import { PropertyItem } from '../../types/intelligence';
+import { PROPERTIES_DATABASE } from '../../data/mockIntelligenceDatabase';
+import { useDecisionStore } from '../../context/DecisionStoreContext';
+import { generateSystemReportPdf } from '../../utils/generateSystemReportPdf';
 
 interface OrganizationSettingsViewProps {
   mode?: 'organization' | 'settings';
+  properties?: PropertyItem[];
 }
 
 export const OrganizationSettingsView: React.FC<OrganizationSettingsViewProps> = ({
-  mode = 'organization'
+  mode = 'organization',
+  properties
 }) => {
   const [saved, setSaved] = useState(false);
   const [minConfidenceThreshold, setMinConfidenceThreshold] = useState(70);
   const [targetMarginPct, setTargetMarginPct] = useState(3.5);
   const [autoFlagRepricingDays, setAutoFlagRepricingDays] = useState(45);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [downloadedPdfName, setDownloadedPdfName] = useState<string | null>(null);
+
+  const { decisionLogs } = useDecisionStore();
 
   const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleGenerateLivePdf = () => {
+    setIsGeneratingPdf(true);
+    try {
+      const activeProps = (properties && properties.length > 0) ? properties : PROPERTIES_DATABASE;
+      const generatedFileName = generateSystemReportPdf({
+        properties: activeProps,
+        decisionLogs,
+        pendingTasksCount: 6,
+        selectedTerritory: 'Tutti i Territori',
+        selectedPeriod: 'Q3 2026 (Live Snapshot)'
+      });
+      setDownloadedPdfName(generatedFileName);
+      setTimeout(() => setDownloadedPdfName(null), 4500);
+    } catch (err) {
+      console.error('Error generating live PDF report:', err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   // Agents data required by Section 15
@@ -208,7 +241,7 @@ export const OrganizationSettingsView: React.FC<OrganizationSettingsViewProps> =
   // mode === 'settings'
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8 text-slate-200">
-      <div className="pb-6 border-b border-slate-800/80 flex items-center justify-between">
+      <div className="pb-6 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-bold mb-1">
             Governance & Impostazioni di Sistema
@@ -217,20 +250,115 @@ export const OrganizationSettingsView: React.FC<OrganizationSettingsViewProps> =
             System Settings & Parametri Algoritmici
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Configurazione delle soglie di confidenza, regole di riposizionamento automatico e parametri fiduciari.
+            Configurazione delle soglie di confidenza, regole di riposizionamento automatico e reportistica di audit.
           </p>
         </div>
 
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
-        >
-          {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-          <span>{saved ? 'Configurazione Salvata' : 'Salva Parametri'}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleGenerateLivePdf}
+            disabled={isGeneratingPdf}
+            className={`px-3.5 py-2 rounded-lg text-xs font-bold border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-xs ${
+              downloadedPdfName
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/80 ring-1 ring-emerald-500/30'
+                : isGeneratingPdf
+                ? 'bg-slate-900 text-slate-400 border-slate-700 cursor-wait opacity-80'
+                : 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/40 hover:border-emerald-400 hover:text-white'
+            }`}
+            title="Genera ed esporta all'istante un nuovo PDF dinamico con lo stato attuale del sistema, le proprietà attive e tutte le funzionalità"
+          >
+            {isGeneratingPdf ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+                <span>Generazione PDF in corso...</span>
+              </>
+            ) : downloadedPdfName ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-mono text-[11px]">Nuovo Report Generato!</span>
+              </>
+            ) : (
+              <>
+                <FileDown className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Genera Report PDF Live</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+          >
+            {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+            <span>{saved ? 'Configurazione Salvata' : 'Salva Parametri'}</span>
+          </button>
+        </div>
       </div>
 
       <div className="space-y-6">
+        {/* System Executive Report & Live Snapshot Card */}
+        <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-white font-bold">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Report Esecutivo & Snapshot di Sistema (Export PDF Live)</h3>
+                <p className="text-xs text-slate-400 font-normal">Dossier dinamico certificato con stato quantitativo, registro decisionale e inventario delle funzionalità.</p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleGenerateLivePdf}
+              disabled={isGeneratingPdf}
+              className={`px-3.5 py-2 rounded-lg text-xs font-bold border transition-all duration-200 flex items-center gap-2 cursor-pointer shrink-0 ${
+                downloadedPdfName
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/80'
+                  : isGeneratingPdf
+                  ? 'bg-slate-900 text-slate-400 border-slate-700 cursor-wait opacity-80'
+                  : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border-emerald-500/40 hover:border-emerald-400'
+              }`}
+            >
+              {isGeneratingPdf ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+                  <span>Generazione in corso...</span>
+                </>
+              ) : downloadedPdfName ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Report Scaricato!</span>
+                </>
+              ) : (
+                <>
+                  <FileDown className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Esporta Report Completo</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Ogni click compila ed esporta un documento PDF univoco e aggiornato in tempo reale: metriche aggregate (valore portafoglio, rating medio, DOM), telemetria delle delibere registrate nel Decision Center, catalogo esaustivo degli 11 moduli architetturali e attestazione formale di conformità.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs font-mono">
+            <div className="p-3 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
+              <span className="text-[10px] text-slate-400 block uppercase">Immobili Censiti</span>
+              <span className="text-emerald-400 font-bold text-sm">{(properties && properties.length) || PROPERTIES_DATABASE.length} Unità Attive</span>
+            </div>
+            <div className="p-3 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
+              <span className="text-[10px] text-slate-400 block uppercase">Log Decisionale</span>
+              <span className="text-cyan-300 font-bold text-sm">{decisionLogs.length} Delibere Tracciate</span>
+            </div>
+            <div className="p-3 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
+              <span className="text-[10px] text-slate-400 block uppercase">Funzionalità Integrate</span>
+              <span className="text-purple-300 font-bold text-sm">11 Moduli Documentati</span>
+            </div>
+          </div>
+        </div>
+
         {/* Fiduciary Decision Rules */}
         <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-5">
           <div className="flex items-center gap-2 text-white font-bold">

@@ -19,12 +19,15 @@ import {
   Activity,
   ShieldCheck,
   AlertTriangle,
-  ArrowRight
+  ArrowRight,
+  Zap
 } from 'lucide-react';
 import { PropertyItem } from '../../types/intelligence';
 import { RatingBadge } from '../badges/RatingBadge';
 import { ConfidenceBadge } from '../badges/ConfidenceBadge';
 import { AgencyFitBadge } from '../badges/AgencyFitBadge';
+import { getPropertyImages } from '../../data/propertyMediaData';
+import { useDecisionStore } from '../../context/DecisionStoreContext';
 
 interface OpportunitiesViewProps {
   properties: PropertyItem[];
@@ -40,6 +43,7 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
   onSelectProperty,
   onCompareProperties
 }) => {
+  const { getLatestLogForProperty } = useDecisionStore();
   const [viewMode, setViewMode] = useState<ViewMode>('explorer');
   const [rankingMetric, setRankingMetric] = useState<RankingMetric>('rating');
   const [searchQuery, setSearchQuery] = useState('');
@@ -350,37 +354,39 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
       {viewMode === 'explorer' && (
         <div className="rounded-xl border border-slate-800/80 bg-slate-950 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-xs border-collapse min-w-[1280px]">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-900/60 font-mono text-[10px] text-slate-400 uppercase tracking-wider">
+                <tr className="border-b border-slate-800 bg-slate-900/70 font-mono text-[10px] text-slate-400 uppercase tracking-wider whitespace-nowrap">
                   <th className="py-3 px-3 w-10 text-center">Sel</th>
-                  <th className="py-3 px-4">Property</th>
-                  <th className="py-3 px-3">Location</th>
-                  <th className="py-3 px-3 text-right cursor-pointer" onClick={() => { setSortField('price'); setSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}>
+                  <th className="py-3 px-4 min-w-[240px]">Property</th>
+                  <th className="py-3 px-3 min-w-[130px]">Location</th>
+                  <th className="py-3 px-3 text-right cursor-pointer min-w-[110px]" onClick={() => { setSortField('price'); setSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}>
                     Asking Price {sortField === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="py-3 px-3 text-right cursor-pointer" onClick={() => { setSortField('fairValue'); setSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}>
+                  <th className="py-3 px-3 text-right cursor-pointer min-w-[110px]" onClick={() => { setSortField('fairValue'); setSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}>
                     Fair Value {sortField === 'fairValue' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="py-3 px-3 text-center cursor-pointer" onClick={() => { setSortField('rating'); setSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}>
+                  <th className="py-3 px-3 text-center cursor-pointer min-w-[75px]" onClick={() => { setSortField('rating'); setSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}>
                     Rating {sortField === 'rating' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="py-3 px-2 text-center">Trend</th>
-                  <th className="py-3 px-3 text-center cursor-pointer" onClick={() => { setSortField('fit'); setSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}>
+                  <th className="py-3 px-2 text-center min-w-[60px]">Trend</th>
+                  <th className="py-3 px-3 text-center cursor-pointer min-w-[85px]" onClick={() => { setSortField('fit'); setSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}>
                     Agency Fit {sortField === 'fit' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="py-3 px-3 text-center">Liquidity</th>
-                  <th className="py-3 px-3 text-center">Risk</th>
-                  <th className="py-3 px-3 text-center">Confidence</th>
-                  <th className="py-3 px-3 text-center">Status</th>
-                  <th className="py-3 px-3 text-right">Azioni</th>
+                  <th className="py-3 px-3 text-center min-w-[80px]">Liquidity</th>
+                  <th className="py-3 px-3 text-center min-w-[70px]">Risk</th>
+                  <th className="py-3 px-3 text-center min-w-[100px]">Confidence</th>
+                  <th className="py-3 px-3 text-center min-w-[125px]">Outcome 14–21d</th>
+                  <th className="py-3 px-3 text-center min-w-[90px]">Status</th>
+                  <th className="py-3 px-3 text-right min-w-[110px]">Azioni</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-slate-800/60">
                 {sortedProperties.map((prop) => {
                   const isSelected = selectedIds.includes(prop.id);
                   const isWatched = watchlistIds.includes(prop.id);
                   const riskDimension = prop.dimensions.find(d => d.key === 'risk')?.score || 80;
+                  const latestLog = getLatestLogForProperty(prop.id);
 
                   return (
                     <tr
@@ -391,7 +397,7 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
                       }`}
                     >
                       {/* Select checkbox */}
-                      <td className="py-3 px-3 text-center" onClick={(e) => toggleSelect(prop.id, e)}>
+                      <td className="py-3 px-3 text-center align-middle" onClick={(e) => toggleSelect(prop.id, e)}>
                         {isSelected ? (
                           <CheckSquare className="w-4 h-4 text-emerald-400 mx-auto" />
                         ) : (
@@ -399,47 +405,57 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
                         )}
                       </td>
 
-                      {/* Property Title & Code */}
-                      <td className="py-3 px-4 font-sans">
-                        <div className="font-bold text-white group-hover:text-emerald-400 transition-colors text-xs flex items-center gap-1.5">
-                          <span>{prop.title}</span>
-                          {prop.priority === 'HIGH' && (
-                            <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">
-                              PRIORITY
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-slate-400 font-mono">
-                          {prop.code} • {prop.squareMeters} m² • Piano {prop.floor}
+                      {/* Property Title & Code with Photo Thumbnail */}
+                      <td className="py-3 px-4 font-sans align-middle">
+                        <div className="flex items-center gap-3 min-w-[240px]">
+                          <img 
+                            src={getPropertyImages(prop)[0]?.url} 
+                            alt={prop.title}
+                            className="w-10 h-10 rounded-lg object-cover border border-slate-800 flex-shrink-0"
+                            loading="lazy"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-white group-hover:text-emerald-400 transition-colors text-xs flex items-center gap-1.5">
+                              <span className="truncate max-w-[190px]">{prop.title}</span>
+                              {prop.priority === 'HIGH' && (
+                                <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold whitespace-nowrap">
+                                  PRIORITY
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-mono whitespace-nowrap mt-0.5">
+                              {prop.code} • {prop.squareMeters} m² • Piano {prop.floor}
+                            </div>
+                          </div>
                         </div>
                       </td>
 
                       {/* Location */}
-                      <td className="py-3 px-3 font-sans">
+                      <td className="py-3 px-3 font-sans align-middle whitespace-nowrap">
                         <div className="text-white text-xs font-medium">{prop.city}</div>
                         <div className="text-[11px] text-slate-400 truncate max-w-[140px]">{prop.microZone}</div>
                       </td>
 
                       {/* Asking Price */}
-                      <td className="py-3 px-3 text-right text-white font-bold text-xs">
-                        €{prop.askingPrice.toLocaleString()}
+                      <td className="py-3 px-3 text-right text-white font-bold text-xs whitespace-nowrap font-mono align-middle">
+                        €{prop.askingPrice.toLocaleString('it-IT')}
                       </td>
 
                       {/* Fair Value */}
-                      <td className="py-3 px-3 text-right text-emerald-400 font-bold text-xs">
-                        €{prop.estimatedFairValue.toLocaleString()}
+                      <td className="py-3 px-3 text-right text-emerald-400 font-bold text-xs whitespace-nowrap font-mono align-middle">
+                        <div>€{prop.estimatedFairValue.toLocaleString('it-IT')}</div>
                         <span className={`block text-[10px] font-normal ${prop.priceDifferencePct < 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {prop.priceDifferencePct > 0 ? `+${prop.priceDifferencePct}%` : `${prop.priceDifferencePct}%`}
                         </span>
                       </td>
 
                       {/* Rating */}
-                      <td className="py-3 px-3 text-center">
-                        <RatingBadge score={prop.realEstateRating} classification={prop.ratingClassification} size="sm" />
+                      <td className="py-3 px-3 text-center whitespace-nowrap align-middle">
+                        <RatingBadge score={prop.realEstateRating} classification={prop.ratingClassification} size="sm" showLabel={false} />
                       </td>
 
                       {/* Trend */}
-                      <td className="py-3 px-2 text-center text-xs">
+                      <td className="py-3 px-2 text-center text-xs whitespace-nowrap font-mono align-middle">
                         {prop.ratingTrend30d >= 0 ? (
                           <span className="text-emerald-400 font-bold">+{prop.ratingTrend30d}</span>
                         ) : (
@@ -448,34 +464,51 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
                       </td>
 
                       {/* Agency Fit */}
-                      <td className="py-3 px-3 text-center">
-                        <AgencyFitBadge score={prop.agencyFit.score} size="sm" />
+                      <td className="py-3 px-3 text-center whitespace-nowrap align-middle">
+                        <AgencyFitBadge score={prop.agencyFit.score} size="sm" showLabel={false} />
                       </td>
 
                       {/* Liquidity */}
-                      <td className="py-3 px-3 text-center text-[11px] text-slate-300">
+                      <td className="py-3 px-3 text-center text-[11px] text-slate-300 whitespace-nowrap font-mono align-middle">
                         {prop.estimatedTimeToSaleDays} gg
                       </td>
 
                       {/* Risk */}
-                      <td className="py-3 px-3 text-center text-xs">
+                      <td className="py-3 px-3 text-center text-xs whitespace-nowrap align-middle">
                         <span className={`px-2 py-0.5 rounded font-mono font-bold text-[10px] ${
                           riskDimension >= 80 ? 'text-emerald-300 bg-emerald-950/40 border border-emerald-500/20' :
                           riskDimension >= 60 ? 'text-amber-300 bg-amber-950/40 border border-amber-500/20' :
                           'text-rose-300 bg-rose-950/40 border border-rose-500/20'
                         }`}>
-                          {riskDimension}/100
+                          {riskDimension}
                         </span>
                       </td>
 
                       {/* Confidence */}
-                      <td className="py-3 px-3 text-center">
+                      <td className="py-3 px-3 text-center whitespace-nowrap align-middle">
                         <ConfidenceBadge score={prop.ratingConfidence} level={prop.ratingConfidenceLevel} size="sm" />
                       </td>
 
+                      {/* Outcome 14-21d Proxy */}
+                      <td className="py-3 px-3 text-center whitespace-nowrap align-middle font-mono">
+                        {latestLog && latestLog.outcomeTracking.shortTermProxies.leadsDelta14d ? (
+                          <div
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold"
+                            title={`CTR: ${latestLog.outcomeTracking.shortTermProxies.ctrChange14d} • Sentiment Prezzo: ${latestLog.outcomeTracking.shortTermProxies.priceFeedbackSummary}`}
+                          >
+                            <Zap className="w-2.5 h-2.5 text-emerald-400" />
+                            <span>{latestLog.outcomeTracking.shortTermProxies.leadsDelta14d}</span>
+                            <span className="text-slate-500">•</span>
+                            <span>{latestLog.outcomeTracking.shortTermProxies.visitsScheduled14d} vis.</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-600 text-[10px]">In osservazione</span>
+                        )}
+                      </td>
+
                       {/* Status */}
-                      <td className="py-3 px-3 text-center">
-                        <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-semibold font-mono ${
+                      <td className="py-3 px-3 text-center whitespace-nowrap align-middle">
+                        <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-semibold font-mono whitespace-nowrap ${
                           prop.status === 'Active' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' :
                           prop.status === 'Review Required' ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20' :
                           'bg-slate-800 text-slate-300'
@@ -485,7 +518,7 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3 px-3 text-right">
+                      <td className="py-3 px-3 text-right whitespace-nowrap align-middle">
                         <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={(e) => toggleWatchlist(prop.id, e)}
@@ -498,7 +531,7 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
                           </button>
                           <button
                             onClick={() => onSelectProperty(prop)}
-                            className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-[11px] font-sans font-semibold transition-colors"
+                            className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-[11px] font-sans font-semibold transition-colors whitespace-nowrap"
                           >
                             Dettaglio
                           </button>
@@ -661,6 +694,16 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
                 </div>
 
                 <div>
+                  <div className="aspect-16/9 w-full rounded-xl overflow-hidden bg-slate-900 border border-slate-800 relative mb-3">
+                    <img 
+                      src={getPropertyImages(mapSelectedProperty)[0]?.url} 
+                      alt={mapSelectedProperty.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-xs text-[10px] font-mono text-white font-bold">
+                      {mapSelectedProperty.propertyType} • {mapSelectedProperty.squareMeters} m²
+                    </span>
+                  </div>
                   <h3 className="text-base font-bold text-white">{mapSelectedProperty.title}</h3>
                   <div className="text-xs text-slate-400 font-mono mt-0.5">{mapSelectedProperty.microZone}</div>
                 </div>
