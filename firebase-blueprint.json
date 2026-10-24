@@ -1,0 +1,239 @@
+{
+  "entities": {
+    "property": {
+      "title": "Property",
+      "description": "Real estate asset portfolio item with intelligence metrics and cadastral compliance",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the property",
+          "maxLength": 128
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase UID of user owning or managing the property",
+          "maxLength": 128
+        },
+        "code": {
+          "type": "string",
+          "description": "Reference code for the property (e.g. RM-1029)",
+          "maxLength": 64
+        },
+        "title": {
+          "type": "string",
+          "description": "Listing title or headline",
+          "maxLength": 256
+        },
+        "address": {
+          "type": "string",
+          "description": "Physical street address",
+          "maxLength": 256
+        },
+        "city": {
+          "type": "string",
+          "description": "Municipality or city name",
+          "maxLength": 128
+        },
+        "province": {
+          "type": "string",
+          "description": "Province 2-letter abbreviation",
+          "maxLength": 10
+        },
+        "microZone": {
+          "type": "string",
+          "description": "Microzone or neighborhood",
+          "maxLength": 128
+        },
+        "propertyType": {
+          "type": "string",
+          "description": "Typology of property",
+          "maxLength": 64
+        },
+        "squareMeters": {
+          "type": "number",
+          "description": "Commercial surface area in sqm"
+        },
+        "rooms": {
+          "type": "number",
+          "description": "Number of rooms / vani"
+        },
+        "bathrooms": {
+          "type": "number",
+          "description": "Number of bathrooms"
+        },
+        "floor": {
+          "type": "number",
+          "description": "Floor level"
+        },
+        "askingPrice": {
+          "type": "number",
+          "description": "Asking price in Euro"
+        },
+        "estimatedFairValue": {
+          "type": "number",
+          "description": "Estimated fair market valuation in Euro"
+        },
+        "realEstateRating": {
+          "type": "number",
+          "description": "Quantitative rating score (0-100)"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status in portfolio",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "code",
+        "title",
+        "city",
+        "askingPrice"
+      ]
+    },
+    "decisionLog": {
+      "title": "DecisionLog",
+      "description": "Logged human decision event and Bayesian behavioral calibration record",
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "description": "Unique event identifier",
+          "maxLength": 128
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase UID of managing user",
+          "maxLength": 128
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp string of the event",
+          "maxLength": 64
+        },
+        "status": {
+          "type": "string",
+          "description": "Operational tracking status",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "eventId",
+        "ownerId"
+      ]
+    },
+    "decisionTask": {
+      "title": "DecisionTask",
+      "description": "Active operational task in the Decision Center",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique task identifier",
+          "maxLength": 128
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase UID of managing user",
+          "maxLength": 128
+        },
+        "propertyId": {
+          "type": "string",
+          "description": "Associated property identifier",
+          "maxLength": 128
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the task: PENDING or DELIBERATED",
+          "maxLength": 64
+        },
+        "recommendedAction": {
+          "type": "string",
+          "description": "Strategic algorithmic recommendation label",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "propertyId",
+        "status"
+      ]
+    },
+    "decisionHistoryItem": {
+      "title": "DecisionHistoryItem",
+      "description": "Historical record of executed human decisions and overrides",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique record identifier",
+          "maxLength": 128
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase UID of managing user",
+          "maxLength": 128
+        },
+        "propertyId": {
+          "type": "string",
+          "description": "Target property identifier",
+          "maxLength": 128
+        },
+        "decisionType": {
+          "type": "string",
+          "description": "Classification of decision: ACCEPTED, MODIFIED, DECLINED",
+          "maxLength": 64
+        },
+        "executedPrice": {
+          "type": "number",
+          "description": "Final deliberated transaction price in Euro"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "propertyId"
+      ]
+    },
+    "connectionTest": {
+      "title": "ConnectionTest",
+      "description": "Smoke test document for Firestore readiness verification",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Connection test status string",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "status"
+      ]
+    }
+  },
+  "firestore": {
+    "/properties/{propertyId}": {
+      "schema": "property",
+      "description": "Real estate asset portfolio items"
+    },
+    "/decision_logs/{logId}": {
+      "schema": "decisionLog",
+      "description": "System and human decision logs"
+    },
+    "/decision_tasks/{taskId}": {
+      "schema": "decisionTask",
+      "description": "Decision Center operational tasks"
+    },
+    "/decision_history/{historyId}": {
+      "schema": "decisionHistoryItem",
+      "description": "Historical audit log of human overrides"
+    },
+    "/test/{testId}": {
+      "schema": "connectionTest",
+      "description": "Database connectivity probe documents"
+    }
+  }
+}

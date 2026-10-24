@@ -20,7 +20,11 @@ import {
   ShieldCheck,
   AlertTriangle,
   ArrowRight,
-  Zap
+  Zap,
+  Clock,
+  Trophy,
+  ShieldAlert,
+  FileCheck2
 } from 'lucide-react';
 import { PropertyItem } from '../../types/intelligence';
 import { RatingBadge } from '../badges/RatingBadge';
@@ -43,7 +47,7 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
   onSelectProperty,
   onCompareProperties
 }) => {
-  const { getLatestLogForProperty } = useDecisionStore();
+  const { getLatestLogForProperty, openProxyReviewModal, openFinalOutcomeModal } = useDecisionStore();
   const [viewMode, setViewMode] = useState<ViewMode>('explorer');
   const [rankingMetric, setRankingMetric] = useState<RankingMetric>('rating');
   const [searchQuery, setSearchQuery] = useState('');
@@ -489,18 +493,113 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
                         <ConfidenceBadge score={prop.ratingConfidence} level={prop.ratingConfidenceLevel} size="sm" />
                       </td>
 
-                      {/* Outcome 14-21d Proxy */}
+                      {/* Outcome 14-21d Proxy & Step 3 Final Outcome */}
                       <td className="py-3 px-3 text-center whitespace-nowrap align-middle font-mono">
-                        {latestLog && latestLog.outcomeTracking.shortTermProxies.leadsDelta14d ? (
-                          <div
+                        {latestLog && latestLog.finalOutcomeReconciliation ? (
+                          latestLog.finalOutcomeReconciliation.outcomeType === 'CLOSED_SALE_WON' ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openFinalOutcomeModal(prop);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-500/80 text-emerald-300 text-[10px] font-bold cursor-pointer transition-all shadow-xs"
+                              title={`Rogito perfezionato • Realization Rate: ${latestLog.finalOutcomeReconciliation.realizationRate?.toFixed(1) || 100}% • Clicca per console esito`}
+                            >
+                              <Trophy className="w-3 h-3 text-emerald-400" />
+                              <span>ROGITO CONFERMATO</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openFinalOutcomeModal(prop);
+                              }}
+                              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-bold cursor-pointer transition-all ${
+                                latestLog.finalOutcomeReconciliation.attribution.worldModelSterilized
+                                  ? 'bg-rose-950/90 hover:bg-rose-900 border-rose-500/80 text-rose-300'
+                                  : 'bg-amber-950/90 hover:bg-amber-900 border-amber-500/80 text-amber-300'
+                              }`}
+                              title={latestLog.finalOutcomeReconciliation.attribution.worldModelSterilized 
+                                ? 'Inerzia agenziale rilevata: World Model sterilizzato' 
+                                : 'Rigetto di mercato confermato: World Model ricalibrato'
+                              }
+                            >
+                              <ShieldAlert className="w-3 h-3 text-rose-400" />
+                              <span>{latestLog.finalOutcomeReconciliation.attribution.worldModelSterilized ? 'INERZIA (STERILIZZATO)' : 'RIGETTO MERCATO'}</span>
+                            </button>
+                          )
+                        ) : latestLog && (latestLog.lifecycleStatus === 'CLOSED_COMPLETED' || latestLog.outcomeTracking.finalOutcome?.closed) ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openFinalOutcomeModal(prop);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-500/80 text-emerald-300 text-[10px] font-bold cursor-pointer transition-all shadow-xs"
+                          >
+                            <Trophy className="w-3 h-3 text-emerald-400" />
+                            <span>ROGITO CONCLUSO</span>
+                          </button>
+                        ) : latestLog && latestLog.lifecycleStatus === 'AWAITING_14D_CHECKPOINT' ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openProxyReviewModal(prop);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-950/90 hover:bg-cyan-900 border border-cyan-500/80 text-cyan-300 text-[10px] font-bold animate-pulse shadow-sm cursor-pointer transition-all"
+                            title="Giorno 14 raggiunto: Richiede riconciliazione empirica metriche"
+                          >
+                            <Activity className="w-3 h-3 text-cyan-400" />
+                            <span>CHECKPOINT T+14</span>
+                          </button>
+                        ) : latestLog && latestLog.lifecycleStatus === 'PROXY_STAGNATION_ALERT' ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openProxyReviewModal(prop);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-950/80 hover:bg-rose-900 border border-rose-500/80 text-rose-300 text-[10px] font-bold cursor-pointer transition-all"
+                            title="Allarme Mancata Reazione Mercato a 14gg. Clicca per riesame strategico"
+                          >
+                            <AlertTriangle className="w-3 h-3 text-rose-400" />
+                            <span>ALLARME STASI</span>
+                          </button>
+                        ) : latestLog && latestLog.lifecycleStatus === 'PROXY_VALIDATED' ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openProxyReviewModal(prop);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold cursor-pointer transition-all"
+                            title={`Traiettoria convalidata • CTR: ${latestLog.outcomeTracking.shortTermProxies.ctrPortalsDelta14d || '+15%'} • Sentiment Prezzo: ${latestLog.outcomeTracking.shortTermProxies.priceFeedbackSummary}`}
+                          >
+                            <Zap className="w-2.5 h-2.5 text-emerald-400" />
+                            <span>{latestLog.outcomeTracking.shortTermProxies.leadsDelta14d || '+35%'}</span>
+                            <span className="text-slate-500">•</span>
+                            <span>{latestLog.outcomeTracking.shortTermProxies.actualVisits14d ?? 4} vis.</span>
+                          </button>
+                        ) : latestLog && latestLog.lifecycleStatus === 'MONITORING_PROXY_WINDOW' ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openProxyReviewModal(prop);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-mono cursor-pointer transition-all"
+                            title="Finestra T+1..T+13 attiva. Clicca per consuntivare o testare la risposta"
+                          >
+                            <Clock className="w-2.5 h-2.5 text-cyan-400" />
+                            <span>Monitoraggio T+3</span>
+                          </button>
+                        ) : latestLog && latestLog.outcomeTracking.shortTermProxies.leadsDelta14d ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openProxyReviewModal(prop);
+                            }}
                             className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold"
-                            title={`CTR: ${latestLog.outcomeTracking.shortTermProxies.ctrChange14d} • Sentiment Prezzo: ${latestLog.outcomeTracking.shortTermProxies.priceFeedbackSummary}`}
                           >
                             <Zap className="w-2.5 h-2.5 text-emerald-400" />
                             <span>{latestLog.outcomeTracking.shortTermProxies.leadsDelta14d}</span>
-                            <span className="text-slate-500">•</span>
-                            <span>{latestLog.outcomeTracking.shortTermProxies.visitsScheduled14d} vis.</span>
-                          </div>
+                          </button>
                         ) : (
                           <span className="text-slate-600 text-[10px]">In osservazione</span>
                         )}
@@ -520,6 +619,16 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
                       {/* Actions */}
                       <td className="py-3 px-3 text-right whitespace-nowrap align-middle">
                         <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openFinalOutcomeModal(prop);
+                            }}
+                            className="p-1.5 rounded-lg border bg-slate-900 text-slate-400 border-slate-800 hover:text-emerald-400 hover:border-emerald-500/40 transition-colors"
+                            title="Consuntivazione Rogito & Esito Finale Mandato (Step 3)"
+                          >
+                            <Trophy className="w-3.5 h-3.5" />
+                          </button>
                           <button
                             onClick={(e) => toggleWatchlist(prop.id, e)}
                             className={`p-1.5 rounded-lg border transition-colors ${

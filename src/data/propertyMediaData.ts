@@ -154,62 +154,260 @@ const PHOTO_SETS = {
   ]
 };
 
-// Generates nearby realistic Points of Interest based on city and microzone
+// Generates nearby realistic Points of Interest based on city and microzone (Fallback contestuale deterministico)
 export function getNearbyPois(property: PropertyItem): NearbyPoi[] {
+  // Se la property possiede già elementi estratti da OpenStreetMap (Overpass API live), usali direttamente!
+  if (property.locationPois && Array.isArray(property.locationPois.elements) && property.locationPois.elements.length > 0) {
+    return property.locationPois.elements;
+  }
+
   const isRome = property.city === 'Roma';
   const isMilan = property.city === 'Milano';
   const isTurin = property.city === 'Torino';
   const isBologna = property.city === 'Bologna';
 
+  const zoneUpper = (property.microZone || '').toUpperCase();
+  const addressUpper = (property.address || '').toUpperCase();
+
   if (isRome) {
+    // Microzona RM_C2: Nomentana / Trieste / Porta Pia / Salario
+    if (
+      zoneUpper.includes('TRIESTE') || 
+      zoneUpper.includes('PORTA PIA') || 
+      zoneUpper.includes('NOMENTANA') || 
+      addressUpper.includes('NOMENTANA') ||
+      zoneUpper.includes('RM_C2')
+    ) {
+      return [
+        {
+          id: 'poi_rm_c2_1',
+          name: 'Metro B / B1 — Fermata Sant\'Agnese/Annibaliano o Policlinico',
+          category: 'transit',
+          distanceMeters: 450,
+          walkingMinutes: 5,
+          lineOrDetail: 'Linea B/B1 (Laurentina - Jonio/Rebibbia)'
+        },
+        {
+          id: 'poi_rm_c2_2',
+          name: 'Villa Torlonia & Villa Paganini',
+          category: 'green',
+          distanceMeters: 250,
+          walkingMinutes: 3,
+          lineOrDetail: 'Parco storico monumentale con percorsi pedonali'
+        },
+        {
+          id: 'poi_rm_c2_3',
+          name: 'Supermercato Pam Local / Carrefour Market Nomentana',
+          category: 'retail',
+          distanceMeters: 180,
+          walkingMinutes: 2,
+          lineOrDetail: 'Aperto 7 giorni su 7 fino alle 21:00'
+        },
+        {
+          id: 'poi_rm_c2_4',
+          name: 'Liceo Scientifico Statale Amedeo Avogadro & IC Trieste',
+          category: 'education',
+          distanceMeters: 320,
+          walkingMinutes: 4,
+          lineOrDetail: 'Scuola primaria, secondaria di I grado e liceo d\'eccellenza'
+        },
+        {
+          id: 'poi_rm_c2_5',
+          name: 'Farmacia Nomentana H24 (Piazza Alessandria / Porta Pia)',
+          category: 'health',
+          distanceMeters: 190,
+          walkingMinutes: 2,
+          lineOrDetail: 'Presidio notturno continuativo e dispensario'
+        }
+      ];
+    }
+
+    // Microzona Prati / Borgo / Delle Vittorie
+    if (zoneUpper.includes('PRATI') || zoneUpper.includes('BORGO') || addressUpper.includes('COLA DI RIENZO') || addressUpper.includes('LEPANTO')) {
+      return [
+        {
+          id: 'poi_rm_prati_1',
+          name: 'Metro A — Fermata Ottaviano / Lepanto',
+          category: 'transit',
+          distanceMeters: 220,
+          walkingMinutes: 3,
+          lineOrDetail: 'Linea A (Battistini - Anagnina)'
+        },
+        {
+          id: 'poi_rm_prati_2',
+          name: 'Piazza Cavour & Giardini Castel Sant\'Angelo',
+          category: 'green',
+          distanceMeters: 450,
+          walkingMinutes: 6,
+          lineOrDetail: 'Area verde protetta con percorsi pedonali'
+        },
+        {
+          id: 'poi_rm_prati_3',
+          name: 'Supermercato Conad City / Carrefour Express Cola di Rienzo',
+          category: 'retail',
+          distanceMeters: 140,
+          walkingMinutes: 2,
+          lineOrDetail: 'Aperto 7 giorni su 7 fino alle 21:00'
+        },
+        {
+          id: 'poi_rm_prati_4',
+          name: 'Liceo Ginnasio Statale Dante Alighieri & IC Chiodi',
+          category: 'education',
+          distanceMeters: 380,
+          walkingMinutes: 5,
+          lineOrDetail: 'Primaria, Secondaria I grado e Liceo Classico'
+        },
+        {
+          id: 'poi_rm_prati_5',
+          name: 'Farmacia Prati H24 (Viale Giulio Cesare)',
+          category: 'health',
+          distanceMeters: 160,
+          walkingMinutes: 2,
+          lineOrDetail: 'Presidio notturno continuativo'
+        }
+      ];
+    }
+
+    // Appio Latino / San Giovanni
+    if (zoneUpper.includes('APPIO') || zoneUpper.includes('SAN GIOVANNI') || zoneUpper.includes('RE DI ROMA')) {
+      return [
+        {
+          id: 'poi_rm_appio_1',
+          name: 'Metro A — Fermata Re di Roma / Furio Camillo',
+          category: 'transit',
+          distanceMeters: 210,
+          walkingMinutes: 3,
+          lineOrDetail: 'Linea A (Battistini - Anagnina)'
+        },
+        {
+          id: 'poi_rm_appio_2',
+          name: 'Parco della Caffarella / Parco Appia Antica',
+          category: 'green',
+          distanceMeters: 420,
+          walkingMinutes: 5,
+          lineOrDetail: 'Grande polmone verde regionale e percorsi ciclabili'
+        },
+        {
+          id: 'poi_rm_appio_3',
+          name: 'Supermercato Conad Superstore / Pam Appia',
+          category: 'retail',
+          distanceMeters: 160,
+          walkingMinutes: 2,
+          lineOrDetail: 'Aperto 7 giorni su 7'
+        },
+        {
+          id: 'poi_rm_appio_4',
+          name: 'Istituto Superiore Bertrand Russell & IC Carducci',
+          category: 'education',
+          distanceMeters: 350,
+          walkingMinutes: 4,
+          lineOrDetail: 'Plesso scolastico pubblico'
+        },
+        {
+          id: 'poi_rm_appio_5',
+          name: 'Farmacia H24 Piazza Re di Roma',
+          category: 'health',
+          distanceMeters: 190,
+          walkingMinutes: 2,
+          lineOrDetail: 'Aperto orario continuato h24'
+        }
+      ];
+    }
+
+    // Default Roma Centro / Altre microzone
     return [
       {
-        id: 'poi_1',
-        name: property.microZone.includes('Appio') ? 'Metro A — Fermata Re di Roma / Furio Camillo' : 'Metro A — Fermata Ottaviano / Lepanto',
+        id: 'poi_rm_gen_1',
+        name: 'Fermata Metropolitana / Stazione TPL Urbana',
         category: 'transit',
-        distanceMeters: 220,
-        walkingMinutes: 3,
-        lineOrDetail: 'Linea A (Battistini - Anagnina)'
+        distanceMeters: 320,
+        walkingMinutes: 4,
+        lineOrDetail: 'Rete Metropolitana e Bus ATAC'
       },
       {
-        id: 'poi_2',
-        name: property.microZone.includes('Appio') ? 'Parco della Caffarella / Appia Antica' : 'Piazza Cavour & Giardini Castel Sant\'Angelo',
+        id: 'poi_rm_gen_2',
+        name: 'Giardino Storico Comunale & Area Verde',
         category: 'green',
-        distanceMeters: 450,
-        walkingMinutes: 6,
-        lineOrDetail: 'Area verde protetta con percorsi ciclopedonali'
-      },
-      {
-        id: 'poi_3',
-        name: 'Supermercato Conad City / Carrefour Express',
-        category: 'retail',
-        distanceMeters: 140,
-        walkingMinutes: 2,
-        lineOrDetail: 'Aperto 7 giorni su 7 fino alle 21:00'
-      },
-      {
-        id: 'poi_4',
-        name: 'Istituto Comprensivo Statale & Liceo Scientifico',
-        category: 'education',
-        distanceMeters: 380,
+        distanceMeters: 410,
         walkingMinutes: 5,
-        lineOrDetail: 'Primaria, Secondaria I grado e Liceo'
+        lineOrDetail: 'Verde pubblico attrezzato'
       },
       {
-        id: 'poi_5',
-        name: 'Farmacia H24 San Giovanni / Prati',
-        category: 'health',
-        distanceMeters: 160,
+        id: 'poi_rm_gen_3',
+        name: 'Supermercato & Botteghe di Quartiere',
+        category: 'retail',
+        distanceMeters: 170,
         walkingMinutes: 2,
-        lineOrDetail: 'Presidio notturno continuativo'
+        lineOrDetail: 'Generi di prima necessità'
+      },
+      {
+        id: 'poi_rm_gen_4',
+        name: 'Istituto Comprensivo Statale di Microzona',
+        category: 'education',
+        distanceMeters: 360,
+        walkingMinutes: 5,
+        lineOrDetail: 'Scuola primaria e secondaria'
+      },
+      {
+        id: 'poi_rm_gen_5',
+        name: 'Farmacia di Turno Territoriale',
+        category: 'health',
+        distanceMeters: 180,
+        walkingMinutes: 2,
+        lineOrDetail: 'Presidio sanitario H24'
       }
     ];
   }
 
   if (isMilan) {
+    if (zoneUpper.includes('ISOLA') || zoneUpper.includes('GARIBALDI')) {
+      return [
+        {
+          id: 'poi_mi_iso_1',
+          name: 'Metro M5 Lilla — Fermata Isola / Garibaldi FS',
+          category: 'transit',
+          distanceMeters: 180,
+          walkingMinutes: 2,
+          lineOrDetail: 'Linea M5 Lilla & Passante Ferroviario Garibaldi'
+        },
+        {
+          id: 'poi_mi_iso_2',
+          name: 'BAM — Biblioteca degli Alberi & Parco Gae Aulenti',
+          category: 'green',
+          distanceMeters: 290,
+          walkingMinutes: 4,
+          lineOrDetail: 'Parco botanico contemporaneo di 95.000 mq'
+        },
+        {
+          id: 'poi_mi_iso_3',
+          name: 'Supermercato Bio c\' Bon / Carrefour Express Borsieri',
+          category: 'retail',
+          distanceMeters: 150,
+          walkingMinutes: 2,
+          lineOrDetail: 'Alimentari biologici e km0'
+        },
+        {
+          id: 'poi_mi_iso_4',
+          name: 'IC Confalonieri & Polo Didattico Isola',
+          category: 'education',
+          distanceMeters: 310,
+          walkingMinutes: 4,
+          lineOrDetail: 'Scuola primaria e media rinnovata'
+        },
+        {
+          id: 'poi_mi_iso_5',
+          name: 'Farmacia Isola H24 (Via Farini / Piazza Minniti)',
+          category: 'health',
+          distanceMeters: 200,
+          walkingMinutes: 3,
+          lineOrDetail: 'Servizio di guardia notturna'
+        }
+      ];
+    }
+
     return [
       {
-        id: 'poi_1',
+        id: 'poi_mi_gen_1',
         name: 'Metro M1 / M5 — Fermata Lotto o CityLife Tre Torri',
         category: 'transit',
         distanceMeters: 190,
@@ -217,7 +415,7 @@ export function getNearbyPois(property: PropertyItem): NearbyPoi[] {
         lineOrDetail: 'Linee Rossa (M1) e Lilla (M5)'
       },
       {
-        id: 'poi_2',
+        id: 'poi_mi_gen_2',
         name: 'CityLife Shopping District & Parco CityLife',
         category: 'green',
         distanceMeters: 320,
@@ -225,7 +423,7 @@ export function getNearbyPois(property: PropertyItem): NearbyPoi[] {
         lineOrDetail: 'Parco contemporaneo di 170.000 mq'
       },
       {
-        id: 'poi_3',
+        id: 'poi_mi_gen_3',
         name: 'Esselunga / Pam Local',
         category: 'retail',
         distanceMeters: 210,
@@ -233,7 +431,7 @@ export function getNearbyPois(property: PropertyItem): NearbyPoi[] {
         lineOrDetail: 'Supermercato di quartiere'
       },
       {
-        id: 'poi_4',
+        id: 'poi_mi_gen_4',
         name: 'Polo Universitario / Istituto Scolastico Paritario',
         category: 'education',
         distanceMeters: 480,
@@ -241,7 +439,7 @@ export function getNearbyPois(property: PropertyItem): NearbyPoi[] {
         lineOrDetail: 'Plesso scolastico internazionale'
       },
       {
-        id: 'poi_5',
+        id: 'poi_mi_gen_5',
         name: 'Ospedale San Giuseppe / Studio Polispecialistico',
         category: 'health',
         distanceMeters: 550,

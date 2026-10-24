@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny catch-all (First Pillar & Global Safety Net)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'infositopellegrino@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isOwner(ownerId) {
+      return isSignedIn() && (request.auth.uid == ownerId || isAdmin());
+    }
+
+    // Validation helper for Property entity
+    function isValidProperty(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'code', 'title', 'city', 'askingPrice']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.ownerId is string && data.ownerId.size() <= 128 &&
+             data.code is string && data.code.size() <= 64 &&
+             data.title is string && data.title.size() <= 256 &&
+             data.city is string && data.city.size() <= 128 &&
+             data.askingPrice is number && data.askingPrice >= 0;
+    }
+
+    // Validation helper for DecisionTask entity
+    function isValidDecisionTask(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'propertyId', 'status']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.ownerId is string && data.ownerId.size() <= 128 &&
+             data.propertyId is string && data.propertyId.size() <= 128 &&
+             data.status is string && data.status.size() <= 64;
+    }
+
+    // Validation helper for DecisionHistoryItem entity
+    function isValidDecisionHistoryItem(data) {
+      return data.keys().hasAll(['id', 'ownerId', 'propertyId']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.ownerId is string && data.ownerId.size() <= 128 &&
+             data.propertyId is string && data.propertyId.size() <= 128;
+    }
+
+    // Validation helper for DecisionLog entity
+    function isValidDecisionLog(data) {
+      return data.keys().hasAll(['eventId', 'ownerId']) &&
+             data.eventId is string && data.eventId.size() <= 128 &&
+             data.ownerId is string && data.ownerId.size() <= 128;
+    }
+
+    // Connection smoke test probe
+    match /test/{testId} {
+      allow get: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Property portfolio collection
+    match /properties/{propertyId} {
+      allow get: if isOwner(resource.data.ownerId);
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && 
+                      isValidId(propertyId) && 
+                      isValidProperty(incoming()) && 
+                      incoming().id == propertyId && 
+                      incoming().ownerId == request.auth.uid;
+      allow update: if isSignedIn() && 
+                      isValidId(propertyId) && 
+                      isValidProperty(incoming()) && 
+                      isOwner(existing().ownerId) && 
+                      incoming().ownerId == existing().ownerId && 
+                      incoming().id == existing().id;
+      allow delete: if isValidId(propertyId) && isOwner(existing().ownerId);
+    }
+
+    // Decision tasks collection
+    match /decision_tasks/{taskId} {
+      allow get: if isOwner(resource.data.ownerId);
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && 
+                      isValidId(taskId) && 
+                      isValidDecisionTask(incoming()) && 
+                      incoming().id == taskId && 
+                      incoming().ownerId == request.auth.uid;
+      allow update: if isSignedIn() && 
+                      isValidId(taskId) && 
+                      isValidDecisionTask(incoming()) && 
+                      isOwner(existing().ownerId) && 
+                      incoming().ownerId == existing().ownerId && 
+                      incoming().id == existing().id;
+      allow delete: if isValidId(taskId) && isOwner(existing().ownerId);
+    }
+
+    // Decision history collection
+    match /decision_history/{historyId} {
+      allow get: if isOwner(resource.data.ownerId);
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && 
+                      isValidId(historyId) && 
+                      isValidDecisionHistoryItem(incoming()) && 
+                      incoming().id == historyId && 
+                      incoming().ownerId == request.auth.uid;
+      allow update: if isSignedIn() && 
+                      isValidId(historyId) && 
+                      isValidDecisionHistoryItem(incoming()) && 
+                      isOwner(existing().ownerId) && 
+                      incoming().ownerId == existing().ownerId && 
+                      incoming().id == existing().id;
+      allow delete: if isValidId(historyId) && isOwner(existing().ownerId);
+    }
+
+    // Decision logs collection
+    match /decision_logs/{logId} {
+      allow get: if isOwner(resource.data.ownerId);
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && 
+                      isValidId(logId) && 
+                      isValidDecisionLog(incoming()) && 
+                      incoming().eventId == logId && 
+                      incoming().ownerId == request.auth.uid;
+      allow update: if isSignedIn() && 
+                      isValidId(logId) && 
+                      isValidDecisionLog(incoming()) && 
+                      isOwner(existing().ownerId) && 
+                      incoming().ownerId == existing().ownerId && 
+                      incoming().eventId == existing().eventId;
+      allow delete: if isValidId(logId) && isOwner(existing().ownerId);
+    }
+  }
+}

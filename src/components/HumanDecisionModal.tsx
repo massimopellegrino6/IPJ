@@ -17,6 +17,7 @@ import {
 import { PropertyItem, ActionScenario } from '../types/intelligence';
 import { useDecisionStore } from '../context/DecisionStoreContext';
 import { DecisionDivergenceCategory } from '../types/decision';
+import { evaluateSubjectWithMca } from '../backend/comparablesClient';
 
 interface HumanDecisionModalProps {
   isOpen: boolean;
@@ -92,7 +93,12 @@ export const HumanDecisionModal: React.FC<HumanDecisionModalProps> = ({
   ];
 
   const handleDownloadDossier = () => {
-    downloadOwnerReport(property);
+    const activeMca = property.mcaEvaluation || evaluateSubjectWithMca(property);
+    const activeScenario = chosenScenario === 'CUSTOM'
+      ? { targetPrice: customPrice, label: 'Scenario Personalizzato' }
+      : { targetPrice: scenarios[chosenScenario].price, label: scenarios[chosenScenario].title };
+
+    downloadOwnerReport(property, activeMca, activeScenario);
     setDownloadSuccess(true);
     setTimeout(() => setDownloadSuccess(false), 4000);
   };

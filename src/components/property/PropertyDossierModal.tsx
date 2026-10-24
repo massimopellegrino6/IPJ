@@ -16,26 +16,33 @@ import {
   Mail,
   Building,
   Layers,
-  FileBadge
+  FileBadge,
+  Edit3
 } from 'lucide-react';
 import { PropertyItem } from '../../types/intelligence';
 import { getPropertyRegistryInfo } from '../../data/propertyRegistryData';
 import { getPropertyImages } from '../../data/propertyMediaData';
+import { CadastralUploadDropzone } from './CadastralUploadDropzone';
+import { EditPropertyModal } from './EditPropertyModal';
 
 interface PropertyDossierModalProps {
   property: PropertyItem | null;
   isOpen: boolean;
   onClose: () => void;
   onOpenIntelligence: (property: PropertyItem) => void;
+  onUpdateProperty?: (updated: PropertyItem) => void;
 }
 
 export const PropertyDossierModal: React.FC<PropertyDossierModalProps> = ({
   property,
   isOpen,
   onClose,
-  onOpenIntelligence
+  onOpenIntelligence,
+  onUpdateProperty
 }) => {
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [showCadastralUpload, setShowCadastralUpload] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   if (!isOpen || !property) return null;
 
@@ -118,30 +125,84 @@ export const PropertyDossierModal: React.FC<PropertyDossierModalProps> = ({
           
           {/* Section 1: Dati Catastali & Regolarità Urbanistica */}
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-2.5 gap-2">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
                   <FileBadge className="w-4 h-4" />
                 </div>
-                <h3 className="text-sm font-bold text-white uppercase font-mono">
-                  Identificativi Catastali Ufficiali (Catasto Fabbricati)
-                </h3>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase font-mono">
+                    Identificativi Catastali Ufficiali (Catasto Fabbricati)
+                  </h3>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    Parser Visura per Soggetto AdE con Certificazione Immobile Principale + Pertinenze
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCadastralUpload(!showCadastralUpload)}
+                  className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-gradient-to-r from-cyan-950 to-indigo-950 hover:from-cyan-900 hover:to-indigo-900 text-cyan-300 border border-cyan-500/40 flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>{showCadastralUpload ? 'Chiudi Parser' : 'Carica Visura AdE (+8% Boost)'}</span>
+                </button>
+
                 {cadastralData.urbanCompliance === 'COMPLIANT' ? (
                   <span className="px-2.5 py-1 rounded-md text-[11px] font-mono font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>Conformità Urbanistica RRE OK</span>
+                    <span>Conformità RRE OK</span>
                   </span>
                 ) : (
                   <span className="px-2.5 py-1 rounded-md text-[11px] font-mono font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    <span>Asseverazione Urbanistica in Corso</span>
+                    <span>In Corso</span>
                   </span>
                 )}
               </div>
             </div>
 
+            {/* Embedded Cadastral Upload Dropzone */}
+            {showCadastralUpload && (
+              <div className="pt-2 pb-2">
+                <CadastralUploadDropzone
+                  currentProperty={property}
+                  onApplyAudit={(updatedProp) => {
+                    if (onUpdateProperty) {
+                      onUpdateProperty(updatedProp);
+                    }
+                    setShowCadastralUpload(false);
+                  }}
+                  onClose={() => setShowCadastralUpload(false)}
+                />
+              </div>
+            )}
+
+            {/* Verified Asset Risk Index Banner */}
+            {cadastralData.assetRiskIndex === 'VERIFIED' && (
+              <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  <div>
+                    <div className="text-xs font-bold text-white font-mono flex items-center gap-2">
+                      <span>Asset Risk Index: VERIFIED</span>
+                      <span className="px-1.5 py-0.2 rounded text-[10px] bg-emerald-500 text-slate-950 font-extrabold">
+                        AUDIT DOCUMENTALE COMPLETO
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-emerald-300/80 font-mono">
+                      Rating Engine World Model: Boost algoritmico +8% applicato (Confidenza: {property.ratingConfidence}%)
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {cadastralData.provenance ? cadastralData.provenance : 'Rogito validato'}
+                </span>
+              </div>
+            )}
+
+            {/* Main Cadastral Card */}
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 text-xs font-mono">
               <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
                 <span className="text-[10px] text-slate-400 block">Comune Catastale</span>
@@ -168,6 +229,38 @@ export const PropertyDossierModal: React.FC<PropertyDossierModalProps> = ({
                 <span className="font-bold text-emerald-400">€{cadastralData.annuity.toLocaleString('it-IT')}</span>
               </div>
             </div>
+
+            {/* Annexes / Pertinenze collegate if available */}
+            {cadastralData.annexes && cadastralData.annexes.length > 0 && (
+              <div className="p-3 rounded-lg bg-slate-950 border border-indigo-500/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-indigo-300">
+                    <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Pertinenze Catastali Collegate ({cadastralData.annexes.length} Rilevate nella Visura)</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    Immobile Principale + Pertinenza Collegata
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
+                  {cadastralData.annexes.map((annex, idx) => (
+                    <div key={idx} className="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-cyan-300">{annex.cadastralCategory}</span>
+                        <span className="text-slate-300"> — {annex.address || property.address}</span>
+                        <span className="text-[10px] text-slate-400 block">
+                          Fgl. {annex.sheet} • Part. {annex.parcel} • Sub. {annex.subaltern} ({annex.totalSurfaceMq || 15} mq)
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 block">Rendita</span>
+                        <span className="font-bold text-emerald-400">€{annex.annuity.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Section 2: Checklist Documentale (Due Diligence) */}
@@ -372,6 +465,15 @@ export const PropertyDossierModal: React.FC<PropertyDossierModalProps> = ({
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
             <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-mono text-xs font-semibold flex items-center justify-center gap-1.5 border border-amber-500/30 transition-colors cursor-pointer"
+              title="Modifica indirizzo, prezzo, vani o dati catastali"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Modifica Dati Immobile</span>
+            </button>
+
+            <button
               onClick={handleDownloadBrochure}
               className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs font-medium flex items-center justify-center gap-2 border border-slate-700 transition-colors cursor-pointer"
             >
@@ -400,6 +502,19 @@ export const PropertyDossierModal: React.FC<PropertyDossierModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Embedded Edit Modal */}
+        <EditPropertyModal
+          property={property}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdateProperty={(updatedProp) => {
+            if (onUpdateProperty) {
+              onUpdateProperty(updatedProp);
+            }
+            setIsEditModalOpen(false);
+          }}
+        />
       </div>
     </div>
   );

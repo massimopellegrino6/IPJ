@@ -21,7 +21,9 @@ import {
   ChevronDown,
   ArrowUpDown,
   Euro,
-  Maximize2
+  Maximize2,
+  FileSpreadsheet,
+  Edit3
 } from 'lucide-react';
 import { PropertyItem } from '../../types/intelligence';
 import { RatingBadge } from '../badges/RatingBadge';
@@ -31,17 +33,21 @@ import { getPropertyImages } from '../../data/propertyMediaData';
 import { getPropertyRegistryInfo } from '../../data/propertyRegistryData';
 import { PropertyDossierModal } from '../property/PropertyDossierModal';
 import { NewPropertyModal } from '../property/NewPropertyModal';
+import { EditPropertyModal } from '../property/EditPropertyModal';
+import { CadastralUploadDropzone } from '../property/CadastralUploadDropzone';
 
 interface PropertiesViewProps {
   properties: PropertyItem[];
   onSelectProperty: (property: PropertyItem) => void;
   onAddProperty?: (property: PropertyItem) => void;
+  onUpdateProperty?: (property: PropertyItem) => void;
 }
 
 export const PropertiesView: React.FC<PropertiesViewProps> = ({
   properties,
   onSelectProperty,
-  onAddProperty
+  onAddProperty,
+  onUpdateProperty
 }) => {
   // View mode switcher: 'grid' | 'table' | 'map'
   const [viewMode, setViewMode] = useState<'grid' | 'table' | 'map'>('table');
@@ -58,6 +64,10 @@ export const PropertiesView: React.FC<PropertiesViewProps> = ({
   const [dossierProperty, setDossierProperty] = useState<PropertyItem | null>(null);
   const [isDossierOpen, setIsDossierOpen] = useState(false);
   const [isNewPropertyOpen, setIsNewPropertyOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<PropertyItem | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCadastralModalOpen, setIsCadastralModalOpen] = useState(false);
+  const [cadastralTargetProp, setCadastralTargetProp] = useState<PropertyItem | null>(properties[0] || null);
   const [selectedMapProperty, setSelectedMapProperty] = useState<PropertyItem>(properties[0]);
   const [exportToast, setExportToast] = useState(false);
 
@@ -190,6 +200,17 @@ export const PropertiesView: React.FC<PropertiesViewProps> = ({
           >
             <Download className="w-3.5 h-3.5 text-slate-400" />
             <span>Esporta Catalogo</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setCadastralTargetProp(properties[0] || null);
+              setIsCadastralModalOpen(true);
+            }}
+            className="px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 font-mono text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer shadow-md shadow-cyan-950/30"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-cyan-400" />
+            <span>Parser Visure AdE</span>
           </button>
 
           <button
@@ -533,6 +554,16 @@ export const PropertiesView: React.FC<PropertiesViewProps> = ({
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                             <button
+                              onClick={() => {
+                                setEditingProperty(prop);
+                                setIsEditModalOpen(true);
+                              }}
+                              className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors cursor-pointer"
+                              title="Modifica Dati Immobile (Indirizzo, Superficie, Prezzo...)"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+                            </button>
+                            <button
                               onClick={() => handleOpenDossier(prop)}
                               className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors cursor-pointer"
                               title="Dossier Tecnico & Conformità"
@@ -668,13 +699,25 @@ export const PropertiesView: React.FC<PropertiesViewProps> = ({
                       </span>
                     </div>
 
-                    <button
-                      onClick={() => handleOpenDossier(prop)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-mono text-cyan-300 flex items-center gap-1 cursor-pointer transition-colors"
-                    >
-                      <FileText className="w-3 h-3 text-cyan-400" />
-                      <span>Dossier ({docCount}/5)</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setEditingProperty(prop);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="p-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-amber-400 cursor-pointer transition-colors"
+                        title="Modifica Dati Immobile"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleOpenDossier(prop)}
+                        className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-mono text-cyan-300 flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <FileText className="w-3 h-3 text-cyan-400" />
+                        <span>Dossier ({docCount}/5)</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -684,88 +727,153 @@ export const PropertiesView: React.FC<PropertiesViewProps> = ({
       )}
 
       {/* MODE C: INVENTORY MAP VIEW */}
-      {viewMode === 'map' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Map Viewer Left (2 cols) */}
-          <div className="lg:col-span-2 rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden relative aspect-16/9 lg:aspect-auto lg:min-h-[620px]">
-            <iframe
-              title="Mappa Inventario Asset"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${selectedMapProperty.coordinates.lng - 0.05}%2C${selectedMapProperty.coordinates.lat - 0.03}%2C${selectedMapProperty.coordinates.lng + 0.05}%2C${selectedMapProperty.coordinates.lat + 0.03}&layer=mapnik&marker=${selectedMapProperty.coordinates.lat}%2C${selectedMapProperty.coordinates.lng}`}
-              className="w-full h-full border-0 filter invert-[90%] hue-rotate-180 contrast-95 opacity-90 hover:opacity-100 transition-opacity"
-              loading="lazy"
-            />
+      {viewMode === 'map' && (() => {
+        const activeMapProp = selectedMapProperty || filteredProperties[0] || properties[0];
+        const safeLat = activeMapProp?.coordinates?.lat ?? 41.9028;
+        const safeLng = activeMapProp?.coordinates?.lng ?? 12.4964;
+        const delta = 0.022;
+        const bbox = `${(safeLng - delta * 1.5).toFixed(5)}%2C${(safeLat - delta).toFixed(5)}%2C${(safeLng + delta * 1.5).toFixed(5)}%2C${(safeLat + delta).toFixed(5)}`;
+        const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${safeLat.toFixed(5)}%2C${safeLng.toFixed(5)}`;
 
-            {/* Floating Quick Selector on Map */}
-            <div className="absolute top-4 left-4 p-3 rounded-xl bg-slate-950/90 backdrop-blur-md border border-slate-800 text-xs font-mono space-y-1 shadow-xl max-w-xs pointer-events-auto">
-              <span className="text-[10px] text-cyan-400 font-bold uppercase block">Asset Georeferenziato</span>
-              <p className="text-white font-bold truncate">{selectedMapProperty.title}</p>
-              <p className="text-slate-400 text-[11px]">{selectedMapProperty.address}, {selectedMapProperty.city}</p>
-            </div>
-          </div>
-
-          {/* Asset Detail & Selector Right (1 col) */}
-          <div className="rounded-2xl bg-slate-950 border border-slate-800 p-5 flex flex-col justify-between space-y-4">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div>
-                  <h3 className="text-sm font-bold text-white font-mono uppercase">Asset Selezionato</h3>
-                  <span className="text-xs text-slate-400 font-mono">{selectedMapProperty.code}</span>
-                </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-950 border border-emerald-500/30 text-emerald-400">
-                  {selectedMapProperty.status}
-                </span>
-              </div>
-
-              {/* Photo preview */}
-              <div className="aspect-16/9 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 relative">
-                <img 
-                  src={getPropertyImages(selectedMapProperty)[0]?.url} 
-                  alt={selectedMapProperty.title}
-                  className="w-full h-full object-cover"
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* Map Viewer Left (2 cols) */}
+              <div className="lg:col-span-2 rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden relative aspect-16/9 lg:aspect-auto lg:min-h-[580px] shadow-xl">
+                <iframe
+                  key={`${safeLat}-${safeLng}`}
+                  title="Mappa Inventario Asset"
+                  src={mapUrl}
+                  className="w-full h-full border-0 brightness-100 contrast-100 opacity-95 hover:opacity-100 transition-opacity"
+                  loading="lazy"
                 />
-                <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 text-[10px] font-mono text-white">
-                  {selectedMapProperty.propertyType} • {selectedMapProperty.squareMeters} m²
-                </span>
-              </div>
 
-              <div>
-                <h4 className="text-base font-bold text-white">{selectedMapProperty.title}</h4>
-                <p className="text-xs text-slate-400 font-mono mt-0.5">{selectedMapProperty.address}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">Prezzo Richiesto</span>
-                  <span className="font-bold text-emerald-400">€{selectedMapProperty.askingPrice.toLocaleString('it-IT')}</span>
+                {/* Floating Quick Selector on Map */}
+                <div className="absolute top-4 left-4 p-3 rounded-xl bg-slate-950/95 backdrop-blur-md border border-slate-800 text-xs font-mono space-y-1 shadow-2xl max-w-sm pointer-events-auto">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-cyan-400 font-bold uppercase block">Asset Georeferenziato</span>
+                    <span className="text-[10px] text-emerald-400 font-mono font-bold">{activeMapProp?.code}</span>
+                  </div>
+                  <p className="text-white font-bold truncate text-sm">{activeMapProp?.title}</p>
+                  <p className="text-slate-400 text-[11px] truncate">{activeMapProp?.address}, {activeMapProp?.city} ({activeMapProp?.province})</p>
+                  <div className="pt-1.5 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800/80">
+                    <span>Coord: {safeLat.toFixed(4)}, {safeLng.toFixed(4)}</span>
+                    <a 
+                      href={`https://www.google.com/maps/search/?api=1&query=${safeLat},${safeLng}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Apri su Maps
+                    </a>
+                  </div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">Prezzo / m²</span>
-                  <span className="font-bold text-white">€{selectedMapProperty.pricePerSqm.toLocaleString('it-IT')}</span>
+              </div>
+
+              {/* Asset Detail & Selector Right (1 col) */}
+              <div className="rounded-2xl bg-slate-950 border border-slate-800 p-5 flex flex-col justify-between space-y-4 shadow-xl">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-white font-mono uppercase">Asset Selezionato</h3>
+                      <span className="text-xs text-slate-400 font-mono">{activeMapProp?.code}</span>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-950 border border-emerald-500/30 text-emerald-400">
+                      {activeMapProp?.status}
+                    </span>
+                  </div>
+
+                  {/* Photo preview */}
+                  <div className="aspect-16/9 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 relative">
+                    <img 
+                      src={getPropertyImages(activeMapProp)[0]?.url} 
+                      alt={activeMapProp?.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 text-[10px] font-mono text-white">
+                      {activeMapProp?.propertyType} • {activeMapProp?.squareMeters} m²
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="text-base font-bold text-white line-clamp-1">{activeMapProp?.title}</h4>
+                    <p className="text-xs text-slate-400 font-mono mt-0.5 line-clamp-1">{activeMapProp?.address}, {activeMapProp?.city}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Prezzo Richiesto</span>
+                      <span className="font-bold text-emerald-400">€{activeMapProp?.askingPrice.toLocaleString('it-IT')}</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Prezzo / m²</span>
+                      <span className="font-bold text-white">€{activeMapProp?.pricePerSqm.toLocaleString('it-IT')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions for selected map item */}
+                <div className="space-y-2 pt-3 border-t border-slate-800">
+                  <button
+                    onClick={() => handleOpenDossier(activeMapProp)}
+                    className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-cyan-300 font-mono text-xs font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Apri Dossier Catastale</span>
+                  </button>
+
+                  <button
+                    onClick={() => onSelectProperty(activeMapProp)}
+                    className="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-md shadow-emerald-500/20"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Apri Scheda Decisionale</span>
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Actions for selected map item */}
-            <div className="space-y-2 pt-3 border-t border-slate-800">
-              <button
-                onClick={() => handleOpenDossier(selectedMapProperty)}
-                className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-cyan-300 font-mono text-xs font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors"
-              >
-                <FileText className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Apri Dossier Catastale</span>
-              </button>
-
-              <button
-                onClick={() => onSelectProperty(selectedMapProperty)}
-                className="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-md shadow-emerald-500/20"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Apri Scheda Decisionale</span>
-              </button>
+            {/* Quick Property Selector Strip below Map */}
+            <div className="rounded-2xl bg-slate-950 border border-slate-800 p-4">
+              <div className="flex items-center justify-between mb-3 text-xs font-mono">
+                <span className="text-slate-300 font-bold uppercase flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Seleziona Immobile da focalizzare sulla mappa ({filteredProperties.length} disponibili)</span>
+                </span>
+                <span className="text-slate-400 text-[11px]">Clicca per centrare il marker</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 max-h-48 overflow-y-auto custom-scrollbar">
+                {filteredProperties.map(p => {
+                  const isCurrent = (activeMapProp?.id === p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedMapProperty(p)}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                        isCurrent 
+                          ? 'bg-emerald-950/60 border-emerald-500 text-white shadow-md shadow-emerald-500/10' 
+                          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 text-slate-300'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                          <span className={`font-bold ${isCurrent ? 'text-emerald-400' : 'text-cyan-400'}`}>{p.code}</span>
+                          <span className="text-slate-400">{p.city}</span>
+                        </div>
+                        <p className="text-xs font-bold truncate">{p.title}</p>
+                      </div>
+                      <div className="mt-2 pt-1 border-t border-slate-800/60 text-[11px] font-mono font-bold text-emerald-400">
+                        €{p.askingPrice.toLocaleString('it-IT')}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 5. Modals */}
       <PropertyDossierModal
@@ -773,6 +881,12 @@ export const PropertiesView: React.FC<PropertiesViewProps> = ({
         isOpen={isDossierOpen}
         onClose={() => setIsDossierOpen(false)}
         onOpenIntelligence={(prop) => onSelectProperty(prop)}
+        onUpdateProperty={(updatedProp) => {
+          if (onUpdateProperty) {
+            onUpdateProperty(updatedProp);
+          }
+          setDossierProperty(updatedProp);
+        }}
       />
 
       <NewPropertyModal
@@ -784,6 +898,66 @@ export const PropertiesView: React.FC<PropertiesViewProps> = ({
           }
         }}
       />
+
+      <EditPropertyModal
+        property={editingProperty}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingProperty(null);
+        }}
+        onUpdateProperty={(updatedProp) => {
+          if (onUpdateProperty) {
+            onUpdateProperty(updatedProp);
+          }
+          if (dossierProperty && dossierProperty.id === updatedProp.id) {
+            setDossierProperty(updatedProp);
+          }
+          setIsEditModalOpen(false);
+          setEditingProperty(null);
+        }}
+      />
+
+      {isCadastralModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in"
+          onClick={() => setIsCadastralModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-slate-400">Associa audit a immobile del catalogo:</span>
+                <select
+                  value={cadastralTargetProp?.id || ''}
+                  onChange={(e) => {
+                    const found = properties.find(p => p.id === e.target.value);
+                    setCadastralTargetProp(found || null);
+                  }}
+                  className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-400"
+                >
+                  {properties.map(p => (
+                    <option key={p.id} value={p.id}>{p.code} — {p.title} ({p.city})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <CadastralUploadDropzone
+              currentProperty={cadastralTargetProp || properties[0]}
+              onApplyAudit={(updatedProp) => {
+                if (onUpdateProperty) {
+                  onUpdateProperty(updatedProp);
+                }
+                setIsCadastralModalOpen(false);
+              }}
+              onClose={() => setIsCadastralModalOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

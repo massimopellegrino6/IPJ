@@ -15,12 +15,15 @@ import {
   CheckCircle2,
   FileDown,
   RefreshCw,
-  FileText
+  FileText,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { PropertyItem } from '../../types/intelligence';
 import { PROPERTIES_DATABASE } from '../../data/mockIntelligenceDatabase';
 import { useDecisionStore } from '../../context/DecisionStoreContext';
 import { generateSystemReportPdf } from '../../utils/generateSystemReportPdf';
+import { useTheme } from '../../context/ThemeContext';
 
 interface OrganizationSettingsViewProps {
   mode?: 'organization' | 'settings';
@@ -39,6 +42,7 @@ export const OrganizationSettingsView: React.FC<OrganizationSettingsViewProps> =
   const [downloadedPdfName, setDownloadedPdfName] = useState<string | null>(null);
 
   const { decisionLogs } = useDecisionStore();
+  const { theme, setTheme } = useTheme();
 
   const handleSave = () => {
     setSaved(true);
@@ -355,6 +359,48 @@ export const OrganizationSettingsView: React.FC<OrganizationSettingsViewProps> =
             <div className="p-3 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
               <span className="text-[10px] text-slate-400 block uppercase">Funzionalità Integrate</span>
               <span className="text-purple-300 font-bold text-sm">11 Moduli Documentati</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Theme Preferences (Dark / Light) */}
+        <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                {theme === 'dark' ? <Moon className="w-5 h-5 text-indigo-400" /> : <Sun className="w-5 h-5 text-amber-500" />}
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Tema Interfaccia (Dark / Light)</h3>
+                <p className="text-xs text-slate-400">Configura la modalità cromatica preferita per l'ambiente di lavoro.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setTheme('dark')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
+                  theme === 'dark'
+                    ? 'bg-slate-800 text-white shadow-xs border border-slate-700/80'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Tema Scuro (Dark)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme('light')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
+                  theme === 'light'
+                    ? 'bg-white text-slate-900 shadow-xs border border-slate-300'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+                <span>Tema Chiaro (Light)</span>
+              </button>
             </div>
           </div>
         </div>

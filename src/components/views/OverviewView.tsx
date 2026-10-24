@@ -19,6 +19,7 @@ import {
   BrainCircuit
 } from 'lucide-react';
 import { PropertyItem } from '../../types/intelligence';
+import { PROPERTIES_DATABASE } from '../../data/mockIntelligenceDatabase';
 import { RatingBadge } from '../badges/RatingBadge';
 import { ConfidenceBadge } from '../badges/ConfidenceBadge';
 import { AgencyFitBadge } from '../badges/AgencyFitBadge';
@@ -38,11 +39,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onNavigateToOpportunities
 }) => {
   const { decisionLogs, getLatestLogForProperty } = useDecisionStore();
-  // Find properties in the database to bind directly to the cards
-  const propRoma18 = properties.find(p => p.id === 'prop_rm_roma_18') || properties[0];
-  const propFrancia42 = properties.find(p => p.id === 'prop_rm_francia_42') || properties[1];
-  const propNomentana221 = properties.find(p => p.id === 'prop_rm_nomentana_221') || properties[2];
-  const propAppia245 = properties.find(p => p.id === 'prop_rm_appia_245') || properties[3];
+  
+  // Safe property resolution with global catalog fallback (prevents undefined when territory filter is active)
+  const defaultFallback = properties[0] || PROPERTIES_DATABASE[0];
+  const propRoma18 = properties.find(p => p.id === 'prop_rm_roma_18') || PROPERTIES_DATABASE.find(p => p.id === 'prop_rm_roma_18') || defaultFallback;
+  const propFrancia42 = properties.find(p => p.id === 'prop_rm_francia_42') || PROPERTIES_DATABASE.find(p => p.id === 'prop_rm_francia_42') || defaultFallback;
+  const propNomentana221 = properties.find(p => p.id === 'prop_rm_nomentana_221') || PROPERTIES_DATABASE.find(p => p.id === 'prop_rm_nomentana_221') || defaultFallback;
+  const propAppia245 = properties.find(p => p.id === 'prop_rm_appia_245') || PROPERTIES_DATABASE.find(p => p.id === 'prop_rm_appia_245') || defaultFallback;
 
   // Specific Decision Priorities required by specification
   const decisionPriorities = [
@@ -364,8 +367,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
                 {/* Short-Term Proxy Telemetry if asset has active decision log */}
                 {(() => {
+                  if (!item.property?.id) return null;
                   const log = getLatestLogForProperty(item.property.id);
-                  if (log && log.outcomeTracking.shortTermProxies.leadsDelta14d) {
+                  if (log && log.outcomeTracking?.shortTermProxies?.leadsDelta14d) {
                     return (
                       <div className="p-2.5 rounded-lg bg-emerald-950/25 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs font-mono">
                         <div className="flex items-center gap-1.5 text-emerald-300 font-bold text-[10px]">
@@ -401,8 +405,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                 </div>
 
                 <button
-                  onClick={() => onSelectProperty(item.property)}
-                  className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+                  onClick={() => {
+                    if (item.property) {
+                      onSelectProperty(item.property);
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                 >
                   <span>Analizza</span>
                   <ArrowRight className="w-3.5 h-3.5" />

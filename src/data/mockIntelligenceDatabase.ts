@@ -562,6 +562,39 @@ export const PROPERTIES_DATABASE: PropertyItem[] = [
     actionScoreObjective: 'Initiate priority buyer matching previews immediately.',
     actionScoreConfidence: 88,
     isActionScoreAvailable: true,
+    actionScenarios: [
+      {
+        id: 'scen_nom_keep',
+        label: 'MANTIENI PREZZO ATTUALE',
+        targetPrice: 460000,
+        priceDeltaPct: 0,
+        actionScore: 62,
+        saleProbability90d: 58,
+        expectedTimeToSaleDays: 78,
+        rationale: 'Mantiene il prezzo a €460.000 (-3.1% rispetto a Fair Value OMI, -5.0% rispetto ad MCA). Assorbimento stimato a 78gg.'
+      },
+      {
+        id: 'scen_nom_target_mca',
+        label: 'VALORE CONGRUO MCA (CONSIGLIATO)',
+        targetPrice: 484000,
+        priceDeltaPct: 5.2,
+        actionScore: 88,
+        saleProbability90d: 74,
+        expectedTimeToSaleDays: 48,
+        isRecommended: true,
+        rationale: 'Allineamento al Valore Congruo MCA (€484.224) supportato dai rogiti storici di Corso Trieste e Via Chiana e da 23 acquirenti attivi.'
+      },
+      {
+        id: 'scen_nom_fast_liquidity',
+        label: 'COLLOCAMENTO ACCELERATO',
+        targetPrice: 440000,
+        priceDeltaPct: -4.3,
+        actionScore: 94,
+        saleProbability90d: 89,
+        expectedTimeToSaleDays: 28,
+        rationale: 'Prezzo a sconto per chiusura rapida entro 30gg attivando prioritariamente i 9 acquirenti High Intent profilati.'
+      }
+    ],
     ratingHistory: [
       { date: '15 July', rating: 80, event: 'Initial mandate', eventCategory: 'PRICE', impact: 0 },
       { date: '1 August', rating: 83, event: 'New subway connection upgrade confirmed', eventCategory: 'MARKET', impact: 3 }
@@ -2160,17 +2193,17 @@ export const DECISION_CENTER_TASKS: DecisionCenterTask[] = [
     propertyTitle: 'Via Nomentana 221 — Roma',
     location: 'Trieste, Roma',
     decisionType: 'CLIENT_MATCHING',
-    currentRating: 83,
+    currentRating: 81,
     ratingClassification: 'STRONG',
     agencyFit: 94,
-    recommendedAction: 'Dispatch private pre-market preview dossier to 9 high-intent embassy buyers',
-    actionScore: 92,
-    confidence: 88,
+    recommendedAction: 'Allineamento al Valore Congruo MCA (€484.000) e dispatch dossier a 23 acquirenti profilati',
+    actionScore: 88,
+    confidence: 90,
     confidenceLevel: 'HIGH',
     priority: 'HIGH',
     deadline: 'Today, 17:00',
-    status: 'PENDING',
-    notes: 'Embassy relocation officer requested 4-room apartments with balcony in Trieste corridor.'
+    status: 'DELIBERATED',
+    notes: 'Deliberato Scenario A (€484.000, +5.2% MCA Fair Value). In monitoraggio attivo T+14 Proxy.'
   },
   {
     id: 'task_04',
@@ -2347,14 +2380,14 @@ export const DATA_SOURCES_LIST: DataSourceItem[] = [
     id: 'ds_market',
     category: 'Market Data',
     name: 'OMI Official Price Benchmarks',
-    provider: 'Osservatorio del Mercato Immobiliare (OMI)',
-    status: 'SIMULATED',
+    provider: 'Osservatorio del Mercato Immobiliare (OMI - Agenzia delle Entrate)',
+    status: 'CONNECTED',
     freshness: 'Semi-annual (2026 S1)',
     coveragePct: 99.1,
-    qualityScore: 92,
-    confidenceImpact: '+15% on macro-zone baseline hedonic anchor',
+    qualityScore: 95,
+    confidenceImpact: '+15% on macro-zone baseline hedonic anchor (w3 = 0.15)',
     recordsCount: '2,840 microzones',
-    lastSync: '15 Aug 2026'
+    lastSync: 'Live ingestion (Semestre Corrente)'
   },
   {
     id: 'ds_trans',
@@ -2399,14 +2432,14 @@ export const DATA_SOURCES_LIST: DataSourceItem[] = [
     id: 'ds_geo',
     category: 'Geospatial',
     name: 'Urban POI & Transit Connectivity GIS',
-    provider: 'OpenStreetMap, Google Places & Municipal Transit API',
-    status: 'SIMULATED',
-    freshness: 'Weekly',
-    coveragePct: 97.8,
-    qualityScore: 95,
-    confidenceImpact: '+12% on Micro-location score',
+    provider: 'OpenStreetMap Overpass API (Live Public Baseline)',
+    status: 'CONNECTED',
+    freshness: 'Real-time OpenStreetMap Ingestion',
+    coveragePct: 99.5,
+    qualityScore: 96,
+    confidenceImpact: '+20% on Location & Context Quality (w1 = 0.20)',
     recordsCount: '342,000 spatial nodes',
-    lastSync: '31 Aug 2026'
+    lastSync: 'Live Overpass query'
   },
   {
     id: 'ds_env',
@@ -2451,14 +2484,14 @@ export const DATA_SOURCES_LIST: DataSourceItem[] = [
     id: 'ds_macro',
     category: 'Macroeconomic',
     name: 'BCE Rates, Inflation & Credit Conditions',
-    provider: 'Banca d Italia, Eurostat & ISTAT',
-    status: 'SIMULATED',
-    freshness: 'Weekly',
+    provider: 'Banca d\'Italia & BCE (Macro & Liquidity)',
+    status: 'CONNECTED',
+    freshness: 'Live snapshot',
     coveragePct: 100.0,
     qualityScore: 99,
-    confidenceImpact: '+10% on Macro / Time dimension cycle rating',
+    confidenceImpact: '+8% on Macro / Time dimension (w7 = 0.08) & DOM Liquidity',
     recordsCount: '12 macro indicators',
-    lastSync: '28 Aug 2026'
+    lastSync: 'Live snapshot'
   }
 ];
 
@@ -2602,6 +2635,91 @@ export const MOCK_NORTH_STAR_METRICS: NorthStarFramework = {
 };
 
 export const MOCK_FORMAL_DECISION_LOGS: FormalDecisionLogEvent[] = [
+  {
+    event_id: 'evt_nomentana_mca_2026',
+    timestamp: '2026-09-25T10:30:00Z',
+    decision_context: {
+      property_id: 'prop_rm_nomentana_221',
+      property_title: 'Via Nomentana 221 — Roma',
+      agent_id: 'agent_m_rossi',
+      agent_name: 'Marco Rossi (Responsabile Acquisizioni)',
+      agency_id: 'branch_roma_nord_01',
+      objective: 'MAX_LIQUIDITY_60D',
+      mandate_days_remaining: 84
+    },
+    rating_snapshot: {
+      real_estate_rating: 81,
+      agency_fit_score: 94,
+      confidence: 0.90,
+      dimensions: { price_fit: 82, demand: 89, liquidity: 84, location: 88 }
+    },
+    recommendation_issued: {
+      action_type: 'TARGETED_CLIENT_MATCHING',
+      current_price: 460000,
+      recommended_price: 484000,
+      action_score: 88,
+      predicted_probability_60d: 0.78,
+      expected_time_to_sale_days: 48
+    },
+    observed_human_decision: {
+      event_type: 'ACCEPTED_RECOMMENDATION',
+      applied_price: 484000,
+      delta_vs_recommendation: 0,
+      slider_release_point: 484000
+    },
+    behavioral_signals_48h: [
+      { signal: 'ACCEPTED_SCENARIO_A_MCA_FAIR_VALUE', timestamp: '2026-09-25T10:30:00Z', intensity: 'HIGH' },
+      { signal: 'DISPATCH_DOSSIER_23_PROFILED_BUYERS', timestamp: '2026-09-25T10:32:00Z', duration_seconds: 45, intensity: 'HIGH' },
+      { signal: 'PROXY_CHECKPOINT_CONFIRMED', timestamp: '2026-09-25T10:35:00Z', intensity: 'HIGH' }
+    ],
+    inferred_motivation: {
+      primary_category: 'STRATEGIC_PREFERENCE',
+      sub_category: 'ALIGNED_WITH_MODEL',
+      confidence_score: 0.90,
+      status: 'CONSOLIDATED',
+      probability_distribution: {
+        STRATEGIC_PREFERENCE: 0.85,
+        EXTERNAL_CONSTRAINT: 0.05,
+        COMMERCIAL_TIMING: 0.04,
+        INFORMATION_GAP: 0.03,
+        MODEL_DISAGREEMENT: 0.02,
+        UNKNOWN: 0.01
+      },
+      bayesianUpdatesCount: 4
+    },
+    operational_effort: {
+      avgLeadContactTimeHours: 1.2,
+      listingFreshnessDays: 1,
+      adSpendAllocatedEuros: 550,
+      scheduledVisitsCompletedRatio: 1.0,
+      isAttributedToOperationalInertia: false,
+      attributionReason: 'Allineamento al Valore Congruo MCA (€484.000) e matching proattivo su 23 acquirenti CRM.'
+    },
+    outcome_tracking: {
+      short_term_proxies: {
+        windowDays: 14,
+        views_delta_pct: '+58%',
+        leads_delta_14d: '+28%',
+        visits_scheduled_14d: 4,
+        offers_received_14d: 1,
+        price_feedback_alignment: 'FAVORABLE',
+        immediateWeightUpdateApplied: true
+      },
+      final_outcome: {
+        closed: false,
+        sale_price: 484000,
+        days_on_market_total: 48,
+        mandate_outcome: 'COMPLETED',
+        price_delta_vs_ai_pct: 0.0,
+        time_delta_vs_ai_days: 0
+      }
+    },
+    learning_segregation: {
+      world_model_impact: 'Metodologia MCA IVS validata: matching congruo a €484.000 (+5.2%) con assorbimento accelerato nel corridoio Trieste/Nomentana.',
+      decision_model_impact: 'Piena convergenza tra raccomandazione algoritmica Scenario A e delibera operatore. Traiettoria confermata al checkpoint T+14.',
+      anti_bias_applied: true
+    }
+  },
   {
     event_id: 'evt_98412_2026',
     timestamp: '2026-09-06T10:30:00Z',

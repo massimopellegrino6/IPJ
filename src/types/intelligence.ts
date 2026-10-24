@@ -3,6 +3,10 @@
  * Core Type Definitions - Institutional & Quantitative Architecture
  */
 
+import { McaEvaluationResult } from './comparables';
+import { MunicipalityDemographics } from './demographics';
+import { EnvironmentalRiskProfile } from './environmentalRisk';
+
 export type RatingClassification = 'CRITICAL' | 'WEAK' | 'NEUTRAL' | 'STRONG' | 'EXCEPTIONAL';
 export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW' | 'LIMITED_EVIDENCE';
 export type PriorityLevel = 'HIGH' | 'OPPORTUNITY' | 'MEDIUM' | 'LOW';
@@ -145,6 +149,16 @@ export interface CadastralInfo {
   cadastralCategory: string; // es. A/2, A/3
   annuity: number; // Rendita catastale in €
   urbanCompliance: 'COMPLIANT' | 'NEEDS_VERIFICATION' | 'AMNESTY_IN_PROGRESS';
+  cityCode?: string; // Codice Catastale Comune (es. H501, B519, F205)
+  cadastralClass?: string;
+  roomsOrSurface?: string;
+  totalSurfaceMq?: number;
+  netSurfaceMq?: number;
+  address?: string;
+  floor?: string;
+  provenance?: string;
+  assetRiskIndex?: 'VERIFIED' | 'NEEDS_AUDIT' | 'AMNESTY_IN_PROGRESS';
+  annexes?: CadastralInfo[];
 }
 
 export interface MandateInfo {
@@ -250,6 +264,12 @@ export interface PropertyItem {
   dataFreshnessDays: number;
   isDegraded?: boolean;
   degradationNote?: string;
+  mcaEvaluation?: McaEvaluationResult;
+  locationPois?: any;
+  demographics?: MunicipalityDemographics;
+  environmentalRisk?: EnvironmentalRiskProfile;
+  resolvedTerritory?: any;
+  omiBand?: any;
 }
 
 export interface DecisionCenterTask {
@@ -267,7 +287,7 @@ export interface DecisionCenterTask {
   confidenceLevel: ConfidenceLevel;
   priority: PriorityLevel;
   deadline: string;
-  status: 'PENDING' | 'ACCEPTED' | 'MODIFIED' | 'DECLINED';
+  status: 'PENDING' | 'ACCEPTED' | 'MODIFIED' | 'DECLINED' | 'DELIBERATED';
   notes: string;
 }
 
@@ -366,6 +386,7 @@ export type DivergencePrimaryCategory =
   | 'UNKNOWN';
 
 export type DivergenceSubCategory =
+  | 'ALIGNED_WITH_MODEL'      // Piena convergenza tra raccomandazione e delibera operatore
   | 'OWNER_CONSTRAINT'       // Rigidità negoziale o aspettativa economica proprietario
   | 'CONTRACT_CONSTRAINT'    // Mandato prossimo alla scadenza: rischio recesso
   | 'FINANCIAL_CONSTRAINT'   // Necessità realizzo minimo legata a mutui/debiti
@@ -375,7 +396,8 @@ export type DivergenceSubCategory =
   | 'LOCAL_TREND_OVERRIDE'   // Percezione locale di dinamiche non intercettate dal dato
   | 'MARGIN_OVER_VELOCITY'   // Priorità alla marginalità provvigionale anziché ai tempi
   | 'PLANNED_DELAY'          // Attesa pianificata: stagionalità, delibere assembleari
-  | 'UNPROVEN_EVIDENCE';     // Evidenza insufficiente per formulare un'ipotesi affidabile
+  | 'UNPROVEN_EVIDENCE'      // Evidenza insufficiente per formulare un'ipotesi affidabile
+  | (string & {});
 
 export interface BehavioralSignalItem {
   signal: string;
@@ -433,6 +455,11 @@ export interface OperationalEffortFilter {
 export interface FormalDecisionLogEvent {
   event_id: string;
   timestamp: string;
+  property_title?: string;
+  applied_price?: number;
+  decision_type?: string;
+  target_dom?: number;
+  confidence?: number;
   decision_context: {
     property_id: string;
     property_title: string;

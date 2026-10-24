@@ -11,8 +11,11 @@ import {
   Database, 
   ShieldCheck, 
   Sliders, 
-  Building
+  Building,
+  Sun,
+  Moon
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export type MainNavTab = 
   | 'overview' 
@@ -50,6 +53,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onTabChange,
   decisionCount = 6
 }) => {
+  const { theme, toggleTheme } = useTheme();
+
   const sections: NavSection[] = [
     {
       title: 'OVERVIEW',
@@ -147,7 +152,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* System Status Footer */}
-      <div className="p-3 border-t border-slate-800/80 bg-slate-950 text-[11px] text-slate-400 font-mono space-y-1">
+      <div className="p-3 border-t border-slate-800/80 bg-slate-950 text-[11px] text-slate-400 font-mono space-y-2">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-slate-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -158,6 +163,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="text-[10px] text-slate-400">
           Dataset dimostrativo: 26 asset
         </div>
+
+        {/* Theme Switch Row */}
+        <button
+          onClick={toggleTheme}
+          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs transition-colors cursor-pointer group"
+          title={theme === 'dark' ? 'Passa al Tema Chiaro' : 'Passa al Tema Scuro'}
+        >
+          <span className="flex items-center gap-2 text-slate-300 font-medium text-[11px]">
+            {theme === 'dark' ? (
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <Moon className="w-3.5 h-3.5 text-indigo-400" />
+            )}
+            <span>Tema {theme === 'dark' ? 'Scuro' : 'Chiaro'}</span>
+          </span>
+          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 uppercase tracking-wider group-hover:text-slate-200">
+            {theme === 'dark' ? 'Light' : 'Dark'}
+          </span>
+        </button>
       </div>
     </aside>
   );

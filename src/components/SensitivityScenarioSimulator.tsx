@@ -20,7 +20,9 @@ import {
 } from 'lucide-react';
 import { PropertyItem } from '../types/intelligence';
 import { useDecisionStore } from '../context/DecisionStoreContext';
-import { DecisionDivergenceCategory } from '../types/decision';
+import { DecisionDivergenceCategory, MotivationProbabilityVector } from '../types/decision';
+import { calculateActionScore, computeBayesianMotivationVector } from '../backend/engine';
+import { evaluateSubjectWithMca } from '../backend/comparablesClient';
 
 interface SensitivityScenarioSimulatorProps {
   property: PropertyItem;
@@ -45,7 +47,7 @@ export const SensitivityScenarioSimulator: React.FC<SensitivityScenarioSimulator
   const [downloadSuccess, setDownloadSuccess] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'DUAL_HORIZON' | 'BAYESIAN_PRIOR'>('DUAL_HORIZON');
 
-  // Dynamic simulation calculations
+  // Dynamic simulation calculations (Product Thesis v1.0)
   const simulation = useMemo(() => {
     const deltaEuro = priceSlider - basePrice;
     const deltaPct = Number(((deltaEuro / basePrice) * 100).toFixed(1));
@@ -68,95 +70,69 @@ export const SensitivityScenarioSimulator: React.FC<SensitivityScenarioSimulator
     let estimatedDays = Math.round(45 * Math.pow(priceRatio, 1.8) * (60 / timeHorizonDays));
     estimatedDays = Math.min(180, Math.max(15, estimatedDays));
 
-    const realizationWeight = 0.55;
-    const probabilityWeight = 0.45;
-    const realizationComponent = Math.min(100, Math.max(20, (priceSlider / basePrice) * 90));
-    const probabilityComponent = adjustedProbability;
-    const rawActionScore = Math.round(realizationComponent * realizationWeight + probabilityComponent * probabilityWeight);
-    const actionScore = Math.min(97, Math.max(25, rawActionScore));
-
-    let dynamicConfidence = property.ratingConfidence || 88;
-    if (Math.abs(deltaFairValuePct) > 12) {
-      dynamicConfidence = Math.max(55, dynamicConfidence - 8);
-    }
-
     // 14-21d Short-term Proxy metrics estimations
     let proxy14dLeadsDelta = '+0%';
     let proxy14dVisits = 1;
     let proxy14dFeedback: 'FAIR' | 'EXCESSIVE' | 'COMPETITIVE' = 'FAIR';
     let proxy14dCtr = '+0%';
+    let leadsTrendNumeric = 0;
 
     if (deltaPct <= -8) {
       proxy14dLeadsDelta = '+48%';
       proxy14dVisits = 5;
       proxy14dFeedback = 'COMPETITIVE';
       proxy14dCtr = '+38%';
+      leadsTrendNumeric = 45;
     } else if (deltaPct < -3) {
       proxy14dLeadsDelta = '+24%';
       proxy14dVisits = 3;
       proxy14dFeedback = 'FAIR';
       proxy14dCtr = '+18%';
+      leadsTrendNumeric = 20;
     } else if (deltaPct === 0) {
       proxy14dLeadsDelta = '-4%';
       proxy14dVisits = 1;
       proxy14dFeedback = 'EXCESSIVE';
       proxy14dCtr = '-2%';
+      leadsTrendNumeric = -5;
     } else {
       proxy14dLeadsDelta = '-22%';
       proxy14dVisits = 0;
       proxy14dFeedback = 'EXCESSIVE';
       proxy14dCtr = '-15%';
+      leadsTrendNumeric = -35;
     }
 
-    // Inferred Implicit Signal
-    let implicitSignal = '';
-    let inferredCategory: DecisionDivergenceCategory = 'STRATEGIC_PREFERENCE';
-    let probabilityDistribution = {
-      EXTERNAL_CONSTRAINT: 0.15,
-      MODEL_DISAGREEMENT: 0.20,
-      STRATEGIC_PREFERENCE: 0.40,
-      COMMERCIAL_TIMING: 0.15,
-      INFORMATION_GAP: 0.05,
-      UNKNOWN: 0.05
-    };
+    // Pure Action Score decoupled from rating
+    const actionScoreResult = calculateActionScore({
+      priceRatio,
+      mandateDaysRemaining: property.mandate?.daysToExpiration || 60,
+      leadsTrend14d: leadsTrendNumeric,
+      agencyFitScore: property.agencyFit?.score || 80,
+      marketLiquidityDays: (property as any).daysOnMarket || property.estimatedTimeToSaleDays || 90,
+      confidenceScore: property.ratingConfidence || 88
+    });
+    const actionScore = actionScoreResult.actionScore;
 
-    if (deltaPct <= -10) {
-      inferredCategory = 'STRATEGIC_PREFERENCE';
-      implicitSignal = 'Priorità strategica: Massima liquidità e azzeramento time-to-sale (rotazione portafoglio rapida).';
-      probabilityDistribution = {
-        EXTERNAL_CONSTRAINT: 0.10,
-        MODEL_DISAGREEMENT: 0.08,
-        STRATEGIC_PREFERENCE: 0.74,
-        COMMERCIAL_TIMING: 0.04,
-        INFORMATION_GAP: 0.02,
-        UNKNOWN: 0.02
-      };
-    } else if (deltaPct < 0 && deltaPct > -7) {
-      inferredCategory = 'EXTERNAL_CONSTRAINT';
-      implicitSignal = 'Strategia di mediazione prudente: gestione della rigidità del venditore con ribasso parziale.';
-      probabilityDistribution = {
-        EXTERNAL_CONSTRAINT: 0.72,
-        MODEL_DISAGREEMENT: 0.12,
-        COMMERCIAL_TIMING: 0.08,
-        INFORMATION_GAP: 0.04,
-        STRATEGIC_PREFERENCE: 0.02,
-        UNKNOWN: 0.02
-      };
-    } else if (deltaPct >= 0) {
-      inferredCategory = 'EXTERNAL_CONSTRAINT';
-      implicitSignal = 'Vincolo esterno rigido o aspettativa speculativa del cliente venditore (Status Quo).';
-      probabilityDistribution = {
-        EXTERNAL_CONSTRAINT: 0.86,
-        MODEL_DISAGREEMENT: 0.05,
-        COMMERCIAL_TIMING: 0.05,
-        INFORMATION_GAP: 0.02,
-        STRATEGIC_PREFERENCE: 0.01,
-        UNKNOWN: 0.01
-      };
-    } else {
-      inferredCategory = 'STRATEGIC_PREFERENCE';
-      implicitSignal = 'Punto di equilibrio ottimale stimato dal modello decisionale.';
+    let dynamicConfidence = property.ratingConfidence || 88;
+    if (Math.abs(deltaFairValuePct) > 12) {
+      dynamicConfidence = Math.max(55, dynamicConfidence - 8);
     }
+
+    // Rigorous Bayesian Motivation Vector:
+    // Pure slider manipulation emits UNKNOWN as dominant (>= 0.40) with status: 'HYPOTHESIS' (Observed Fact ≠ Inferred Motivation)
+    const bayesianInference = computeBayesianMotivationVector({
+      eventType: deltaPct === 0 ? 'ACTION_OVERRIDE' : deltaPct < 0 ? 'PARTIAL_PRICE_ADJUSTMENT' : 'ACTION_OVERRIDE',
+      appliedPrice: priceSlider,
+      recommendedPrice: basePrice,
+      scenarioChosen: 'CUSTOM_SLIDER',
+      mandateDaysRemaining: property.mandate?.daysToExpiration || 60,
+      behavioralSignals: []
+    });
+
+    const inferredCategory = bayesianInference.primaryCategory;
+    const probabilityDistribution = bayesianInference.probabilityVector;
+    const implicitSignal = bayesianInference.attributionRationale;
 
     const estimatedCommission = Math.round(priceSlider * 0.03);
 
@@ -171,6 +147,8 @@ export const SensitivityScenarioSimulator: React.FC<SensitivityScenarioSimulator
       implicitSignal,
       inferredCategory,
       probabilityDistribution,
+      bayesianStatus: bayesianInference.status,
+      confidenceScore: bayesianInference.confidenceScore,
       estimatedCommission,
       proxy14d: {
         leadsDelta: proxy14dLeadsDelta,
@@ -179,7 +157,7 @@ export const SensitivityScenarioSimulator: React.FC<SensitivityScenarioSimulator
         ctr: proxy14dCtr
       }
     };
-  }, [priceSlider, timeHorizonDays, basePrice, fairValue, property.ratingConfidence]);
+  }, [priceSlider, timeHorizonDays, basePrice, fairValue, property]);
 
   const handleSliderRelease = () => {
     emitSignal(property.id, 'SLIDER_TOLERANCE_TEST', {
@@ -191,7 +169,12 @@ export const SensitivityScenarioSimulator: React.FC<SensitivityScenarioSimulator
   };
 
   const handleDownloadDossier = () => {
-    downloadOwnerReport(property);
+    const activeMca = property.mcaEvaluation || evaluateSubjectWithMca(property);
+    const activeScenario = {
+      targetPrice: priceSlider,
+      label: `Scenario Simulato: €${priceSlider.toLocaleString('it-IT')}`
+    };
+    downloadOwnerReport(property, activeMca, activeScenario);
     setDownloadSuccess(true);
     setTimeout(() => setDownloadSuccess(false), 4000);
   };
@@ -453,7 +436,9 @@ export const SensitivityScenarioSimulator: React.FC<SensitivityScenarioSimulator
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
           <div className="text-[11px] text-slate-400">
-            Inferenza assegnata al log: <strong className="text-white font-mono">{simulation.inferredCategory}</strong> (Confidenza: {Math.round(simulation.probabilityDistribution.EXTERNAL_CONSTRAINT * 100)}%)
+            Inferenza assegnata al log: <strong className="text-white font-mono">{simulation.inferredCategory}</strong>{' '}
+            <span className="text-cyan-300 font-mono font-bold uppercase">[{simulation.bayesianStatus}]</span>{' '}
+            (Confidenza: {Math.round(simulation.confidenceScore * 100)}%)
           </div>
 
           <button
@@ -463,6 +448,20 @@ export const SensitivityScenarioSimulator: React.FC<SensitivityScenarioSimulator
             <CheckCircle2 className="w-4 h-4" />
             <span>Adotta Scenario (€{priceSlider.toLocaleString()}) & Registra Log</span>
           </button>
+        </div>
+
+        {/* Probability Vector Distribution Bar */}
+        <div className="mt-2 pt-2 border-t border-slate-800/80 flex flex-wrap items-center gap-2 text-[10px] font-mono text-slate-400">
+          <span className="font-bold text-slate-300">Vettore P(M):</span>
+          <span>UNKNOWN: <strong className="text-amber-300">{Math.round(simulation.probabilityDistribution.UNKNOWN * 100)}%</strong></span>
+          <span>•</span>
+          <span>EXT_CONSTRAINT: <strong className="text-white">{Math.round(simulation.probabilityDistribution.EXTERNAL_CONSTRAINT * 100)}%</strong></span>
+          <span>•</span>
+          <span>STRAT_PREF: <strong className="text-white">{Math.round(simulation.probabilityDistribution.STRATEGIC_PREFERENCE * 100)}%</strong></span>
+          <span>•</span>
+          <span>MODEL_DISAGREE: <strong className="text-white">{Math.round(simulation.probabilityDistribution.MODEL_DISAGREEMENT * 100)}%</strong></span>
+          <span>•</span>
+          <span>TIMING: <strong className="text-white">{Math.round(simulation.probabilityDistribution.COMMERCIAL_TIMING * 100)}%</strong></span>
         </div>
       </div>
     </div>

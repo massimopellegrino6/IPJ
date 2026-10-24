@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, CheckCircle2, AlertCircle, Database, HelpCircle, Layers, ArrowRight } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Database, HelpCircle, Layers, ArrowRight, TrendingUp, Scale, Building2 } from 'lucide-react';
 import { PropertyItem, SubDimension } from '../types/intelligence';
+import { evaluateSubjectWithMca } from '../backend/comparablesClient';
 
 interface ExplainabilityDrawerProps {
   isOpen: boolean;
@@ -28,6 +29,9 @@ export const ExplainabilityDrawer: React.FC<ExplainabilityDrawerProps> = ({
   // Specific evidence data tailored for the clicked item
   const isEconomicsOrPrice = dimension.key === 'economics' || targetSub.name.toLowerCase().includes('price');
 
+  // Risoluzione MCA locale (o recupero da property)
+  const mca = property.mcaEvaluation || evaluateSubjectWithMca(property);
+
   const evidence = {
     dimensionName: `${dimension.name} → ${targetSub.name}`,
     score: targetSub.score,
@@ -35,25 +39,33 @@ export const ExplainabilityDrawer: React.FC<ExplainabilityDrawerProps> = ({
     askingPrice: property.askingPrice,
     estimatedFairValue: property.estimatedFairValue,
     differencePct: property.priceDifferencePct,
-    comparablesCount: 18,
-    verifiedTransactions: 11,
-    medianComparablePriceSqm: 4120,
+    comparablesCount: mca.comparablesFoundCount,
+    verifiedTransactions: mca.comparablesFoundCount,
+    medianComparablePriceSqm: mca.mcaPricePerMqMean,
     propertyPriceSqm: Math.round(property.askingPrice / property.squareMeters),
-    dataFreshnessDays: 12,
-    modelVersion: 'Modello Rating v0.1',
+    dataFreshnessDays: property.dataFreshnessDays || 4,
+    modelVersion: 'Modello Rating v1.0 (Strada C MCA)',
     positiveFactors: [
-      'Prezzo inferiore al valore congruo stimato dall\'algoritmo (-7,7%)',
-      'Evidenza comparabile simulata (11 rogiti notarili demo nel raggio di 500m)',
-      'Indice di domanda acquirenti qualificati nel top 15° percentile per Appio Latino'
+      property.priceDifferencePct <= 0
+        ? `Prezzo a sconto rispetto al Fair Value stimato (${property.priceDifferencePct}%)`
+        : `Domanda attiva verificata per immobili similari nella microzona`,
+      mca.status === 'MCA_SAMPLE_VALID'
+        ? `Rilevati ${mca.comparablesFoundCount} rogiti notarili verificati entro 600m con rettifiche edoniche marginali IVS`
+        : `Quotazioni Agenzia Entrate OMI ufficiali ancorate alla microzona catastale`,
+      'Indice di domanda acquirenti profilati con budget compatibile'
     ],
     negativeFactors: [
-      'Incremento dell\'offerta concorrente attiva locale (+6 annunci nel 3° trimestre)',
-      'Necessità di riqualificazione energetica in vista della direttiva europea EPBD Case Green 2030'
+      property.priceDifferencePct > 5
+        ? `Prezzo richiesto eccedente la mediana rettificata dei rogiti (+${property.priceDifferencePct}%)`
+        : `Necessità di riqualificazione energetica in vista della direttiva EPBD 2030`,
+      mca.status === 'FALLBACK_OMI_DEGRADED'
+        ? `Penalità statistica applicata (-25 pt confidenza) per campione transazioni locali ridotto (<3 rogiti)`
+        : `Scostamento max-min dei comparabili al ${mca.divergenceSpreadPct}%`
     ],
     sources: [
-      'Agenzia delle Entrate - OMI Microzona Appio Latino 2026-S1',
-      'Banca Dati Rogiti Notarili e Compravendite Chiuse',
-      'Grafo Nodi di Trasporto ARPA & OpenStreetMap'
+      'Banca Dati Rogiti Notarili & Storico Compravendite Chiuse (REDIP Closed-Loop)',
+      'Agenzia delle Entrate - OMI Microzona Semestre Corrente',
+      'OpenStreetMap Overpass Geocoding & POI Analytics'
     ]
   };
 
@@ -166,6 +178,90 @@ export const ExplainabilityDrawer: React.FC<ExplainabilityDrawerProps> = ({
                     {evidence.dataFreshnessDays} giorni fa
                   </div>
                 </div>
+              </div>
+
+              {/* MCA DETAIL SECTION: Table of Verified Deeds or Degraded Alert */}
+              <div className="mt-4 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Scale className="w-3.5 h-3.5 text-cyan-400" />
+                    Market Comparison Approach (MCA) — Strada C
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                    mca.status === 'MCA_SAMPLE_VALID' 
+                      ? 'bg-emerald-950 text-emerald-300 border border-emerald-600/40' 
+                      : 'bg-amber-950 text-amber-300 border border-amber-600/40'
+                  }`}>
+                    {mca.status === 'MCA_SAMPLE_VALID' ? 'MCA SAMPLE VALID' : 'FALLBACK OMI DEGRADED'}
+                  </span>
+                </div>
+
+                {mca.status === 'MCA_SAMPLE_VALID' ? (
+                  <div className="rounded-lg border border-slate-800 overflow-hidden bg-slate-900/80">
+                    <div className="p-2.5 bg-slate-800/50 border-b border-slate-800 flex items-center justify-between text-[11px] text-slate-300 font-mono">
+                      <span>Campione: <strong>{mca.comparablesFoundCount} rogiti</strong> (&le; 600m)</span>
+                      <span>Dispersione: <strong className="text-emerald-400">{mca.divergenceSpreadPct}%</strong></span>
+                    </div>
+                    <div className="divide-y divide-slate-800 text-[11px] font-mono">
+                      {mca.comparables.map((comp) => {
+                        const adj = comp.mcaAdjustments;
+                        const deltaPct = adj 
+                          ? Number((((adj.adjustedPriceEur - comp.salePriceEur) / comp.salePriceEur) * 100).toFixed(1))
+                          : 0;
+                        return (
+                          <div key={comp.id} className="p-2.5 hover:bg-slate-850/60 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-white truncate max-w-[240px]">
+                                {comp.propertyAddress}
+                              </span>
+                              <span className="text-[10px] text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/40">
+                                {comp.distanceMeters}m • {comp.monthsAgo}m fa
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-slate-400 text-[10px]">
+                              <span>Rogito: €{comp.salePriceEur.toLocaleString()} (€{comp.pricePerMq}/m²)</span>
+                              <span className="text-emerald-300 font-bold">
+                                Rettificato MCA: €{adj?.adjustedPriceEur.toLocaleString() ?? comp.salePriceEur.toLocaleString()} ({deltaPct >= 0 ? `+${deltaPct}%` : `${deltaPct}%`})
+                              </span>
+                            </div>
+                            <div className="text-[9px] text-slate-400 flex items-center gap-2">
+                              <span>P{comp.features.floor}</span>
+                              <span>•</span>
+                              <span>{comp.features.hasElevator ? 'Ascensore Sì' : 'Senza Ascensore'}</span>
+                              <span>•</span>
+                              <span>{comp.features.conservationState}</span>
+                              <span>•</span>
+                              <span>Classe {comp.features.energyClass}</span>
+                              <span>•</span>
+                              <span className="text-slate-400">Fonte: {comp.source === 'REDIP_CLOSED_LOOP' ? 'REDIP Closed-Loop' : 'Archivio Storico'}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="p-2 bg-slate-900 text-[10px] text-slate-400 border-t border-slate-800 font-mono">
+                      Media Ponderata Rettificata: <strong className="text-white">€{mca.mcaPricePerMqMean.toLocaleString()}/m²</strong> | Fair Value MCA: <strong className="text-emerald-400">€{mca.mcaFairValueCentral.toLocaleString()}</strong>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-lg bg-amber-950/30 border border-amber-600/40 text-amber-200 text-xs space-y-2">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="font-bold text-amber-300">
+                          Graceful Degradation Attiva (Product Thesis §28)
+                        </div>
+                        <p className="text-[11px] text-amber-200/90 mt-0.5">
+                          Campione transazioni locali ridotto (&lt; 3 rogiti verificati entro 600m). La valutazione è ancorata al corridoio delle quotazioni semestrali OMI con <strong>penalità di confidenza deterministica di -25 punti</strong>.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="p-2 rounded bg-amber-900/30 text-[10px] font-mono text-amber-300 flex items-center justify-between">
+                      <span>Penalità Applicata: -25 pt</span>
+                      <span>Baseline: Corridoio OMI Microzona</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

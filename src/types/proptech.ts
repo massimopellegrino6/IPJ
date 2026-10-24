@@ -170,6 +170,14 @@ export interface DecisionLogEntry {
   agent_feedback_notes?: string | null;
   delta_price_pct?: number | null;
   
+  // Step 3 Outcome Tracking & Bias Segregation
+  final_mandate_outcome?: 'CLOSED_SALE_WON' | 'MANDATE_EXPIRED_LOST' | 'SELLER_REVOKED_LOST' | 'PRICE_WITHDRAWN' | null;
+  attribution_bias_category?: 'ORGANIZATIONAL_INERTIA_BIAS' | 'WORLD_MODEL_RECALIBRATION' | 'HUMAN_EXPERTISE_SURPLUS' | 'MARKET_ALIGNED_SUCCESS' | null;
+  world_model_sterilized?: boolean | null;
+  operative_effort_score?: number | null;
+  actual_sale_price?: number | null;
+  days_on_market_actual?: number | null;
+
   decided_at?: string;
   created_at: string;
 }
